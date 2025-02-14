@@ -2,7 +2,7 @@ using namespace std;
 #include <iostream>
 #include <fstream>
 #include "pin.H"
-
+#include<unordered_set>
 ofstream OutFile;
 
 // The running count of instructions is kept here
@@ -27,16 +27,18 @@ static UINT64 system_calls=0;
 static UINT64 floating_point_instructions=0;
 static UINT64 others=0;
 static UINT64 total_instructions=0;
+static unordered_set<UINT64> InsMemFootPrint;
+static unordered_set<UINT64> DataMemFootPrint;
 // This function is called before every instruction is executed
 ADDRINT Terminate(void)
 {
     return (icount >= fast_forward_count + 1000000000);
 }
 ADDRINT CheckFastForward (void) {
-	return analyze=((icount >= fast_forward_count) && (icount < fast_forward_count + 1000000000));
+    return analyze=((icount >= fast_forward_count) && (icount < fast_forward_count + 1000000000));
 }
 ADDRINT FastForward (void) {
-	return analyze;
+    return analyze;
 }
 
 // This function is called before every block
@@ -59,12 +61,16 @@ VOID countmmxandsseinstructions() { mmx_and_sse_instructions ++;}
 VOID countsystemcalls() { system_calls ++;}
 VOID countfloatingpointinstructions() { floating_point_instructions ++;}
 VOID countothers() { others ++;}
-VOID Analysis(){
+VOID InstructionFootprint(UINT64 i)
+{
+    InsMemFootPrint.insert(i);
+}
+VOID MemoryFootprint(ADDRINT i, UINT32 j)
+{
+    DataMemFootPrint.insert(((UINT64)i + j)/32);
+}
 
-}
-VOID PredicatedAnalysis(){
-    
-}
+
 void MyExitRoutine() {
     total_instructions = loads + stores + nops + direct_calls + indirect_calls + returns + unconditional_branches + conditional_branches + logical_operations + rotate_and_shift_operations + flag_operations + vector_instructions + conditional_moves + mmx_and_sse_instructions + system_calls + floating_point_instructions + others;
     OutFile << "===============================================\n";
@@ -87,9 +93,11 @@ void MyExitRoutine() {
     OutFile << "Floating Point Instructions: " << floating_point_instructions <<" (" <<(double)floating_point_instructions/(double)total_instructions<<")"<< endl;
     OutFile << "Others: " << others <<" (" <<(double)others/(double)total_instructions<<")"<< endl; 
     UINT64 cycles= (loads*70) + (stores*70) + nops + direct_calls + indirect_calls + returns + unconditional_branches + conditional_branches + logical_operations + rotate_and_shift_operations + flag_operations + vector_instructions + conditional_moves + mmx_and_sse_instructions + system_calls + floating_point_instructions + others;
-    cout<<"CPI: "<<(double)cycles/(double)total_instructions<<endl;
+    OutFile <<"CPI: "<<(double)cycles/(double)total_instructions<<endl;
+    OutFile << "Instruction Blocks accesses: " << InsMemFootPrint.size()  << endl;
+    OutFile << "Memory Blocks accesses: " << DataMemFootPrint.size()  << endl;
     OutFile.close();
-	exit(0);
+    exit(0);
 }    
 // Pin calls this function every time a new instruction is encountered
 VOID Trace(TRACE trace, VOID *v)
@@ -104,8 +112,9 @@ VOID Trace(TRACE trace, VOID *v)
             UINT32 memOperands = INS_MemoryOperandCount(ins);
             for (UINT32 memOp = 0; memOp < memOperands; memOp++){
                 UINT32 memopsize=INS_MemoryOperandSize(ins,memOp);
-                memopsize=memopsize+3;
-                memopsize=memopsize/4;
+                UINT32 memopsize1;
+                memopsize1=memopsize+3;
+                memopsize1=memopsize1/4;
                 if(INS_MemoryOperandIsRead(ins, memOp)){
                     INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
                     INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countloads,IARG_UINT32,memopsize,IARG_END);
@@ -114,7 +123,19 @@ VOID Trace(TRACE trace, VOID *v)
                     INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
                     INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countstores,IARG_UINT32,memopsize,IARG_END);
                 }
+                for (UINT64 addr = 0; addr < memopsize; addr += 32) {
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)MemoryFootprint,IARG_MEMORYOP_EA, memOp, IARG_UINT32, addr, IARG_END);
+                }
+
             }
+            UINT32 InsSize = INS_Size(ins);    
+            UINT64 InsAddr = INS_Address(ins);
+            for (UINT64 addr = InsAddr; addr < (InsAddr + InsSize); addr += 32) {
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionFootprint,IARG_UINT64,addr/32, IARG_END);
+            }
+
             if (INS_Category(ins) == XED_CATEGORY_NOP) {
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
                 INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countnops,IARG_END);
@@ -177,10 +198,7 @@ VOID Trace(TRACE trace, VOID *v)
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
                 INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countothers,IARG_END);
             }
-            INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-            INS_InsertThenCall(ins,IPOINT_BEFORE, (AFUNPTR)Analysis,IARG_ADDRINT,INS_Address(ins),IARG_END);
-            INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-            INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)PredicatedAnalysis, IARG_ADDRINT,INS_Address(ins),IARG_END);
+           
         }
         BBL_InsertCall(bbl, IPOINT_BEFORE, (AFUNPTR)docount, IARG_UINT32, BBL_NumIns(bbl), IARG_END);
     }
