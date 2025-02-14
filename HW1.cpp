@@ -32,7 +32,7 @@ ADDRINT Terminate(void)
 {
     return (icount >= fast_forward_count + 1000000000);
 }
-VOID CheckFastForward (void) {
+ADDRINT CheckFastForward (void) {
 	return analyze=((icount >= fast_forward_count) && (icount < fast_forward_count + 1000000000));
 }
 ADDRINT FastForward (void) {
@@ -220,6 +220,7 @@ int main(int argc, char * argv[])
 
     OutFile.open(KnobOutputFile.Value().c_str());
     fast_forward_count = KnobForwardCount.Value();
+    fast_forward_count = fast_forward_count * (UINT)(1000000000);
     // Register Instruction to be called to instrument instructions
     TRACE_AddInstrumentFunction(Trace, 0);
 
