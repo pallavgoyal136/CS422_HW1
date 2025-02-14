@@ -64,7 +64,7 @@ VOID Analysis(){
 VOID PredicatedAnalysis(){
     
 }
-void MyExitRoutine(...) {
+void MyExitRoutine() {
     OutFile << "===============================================\n";
     OutFile << "Instruction Type Results: \n";
     OutFile << "Loads: " << loads << endl;
@@ -183,6 +183,9 @@ VOID Trace(TRACE trace, VOID *v)
 
 KNOB<string> KnobOutputFile(KNOB_MODE_WRITEONCE, "pintool",
     "o", "sampler.out", "specify output file name");
+KNOB<UINT64> KnobForwardCount(KNOB_MODE_WRITEONCE, "pintool",
+    "f", "100000000", "specify fast forward count");
+// Set static variable from KNOB
 
 // This function is called when the application exits
 VOID Fini(INT32 code, VOID *v)
@@ -216,7 +219,7 @@ int main(int argc, char * argv[])
     if (PIN_Init(argc, argv)) return Usage();
 
     OutFile.open(KnobOutputFile.Value().c_str());
-
+    fast_forward_count = KnobForwardCount.Value();
     // Register Instruction to be called to instrument instructions
     TRACE_AddInstrumentFunction(Trace, 0);
 
