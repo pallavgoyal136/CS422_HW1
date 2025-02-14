@@ -65,12 +65,26 @@ VOID PredicatedAnalysis(){
     
 }
 void MyExitRoutine(...) {
-	// Do an exit system call to exit the application.
-	// As we are calling the exit system call PIN would not be able to instrument application end.
-	// Because of this, even if you are instrumenting the application end, the Fini function would not
-	// be called. Thus you should report the statistics here, before doing the exit system call.
-
-	// Results etc
+    OutFile << "===============================================\n";
+    OutFile << "Instruction Type Results: \n";
+    OutFile << "Loads: " << loads << endl;
+    OutFile << "Stores: " << stores << endl;
+    OutFile << "Nops: " << nops << endl;
+    OutFile << "Direct Calls: " << direct_calls << endl;
+    OutFile << "Indirect Calls: " << indirect_calls << endl;
+    OutFile << "Returns: " << returns << endl;
+    OutFile << "Unconditional Branches: " << unconditional_branches << endl;
+    OutFile << "Conditional Branches: " << conditional_branches << endl;
+    OutFile << "Logical Operations: " << logical_operations << endl;
+    OutFile << "Rotate and Shift Operations: " << rotate_and_shift_operations << endl;
+    OutFile << "Flag Operations: " << flag_operations << endl;
+    OutFile << "Vector Instructions: " << vector_instructions << endl;
+    OutFile << "Conditional Moves: " << conditional_moves << endl;
+    OutFile << "MMX and SSE Instructions: " << mmx_and_sse_instructions << endl;
+    OutFile << "System Calls: " << system_calls << endl;
+    OutFile << "Floating Point Instructions: " << floating_point_instructions << endl;
+    OutFile << "Others: " << others << endl;
+    OutFile.close();
 	exit(0);
 }    
 // Pin calls this function every time a new instruction is encountered
