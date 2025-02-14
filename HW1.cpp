@@ -145,7 +145,7 @@ VOID Trace(TRACE trace, VOID *v)
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
                 INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countflagoperations,IARG_END);
             }
-            else if((INS_Category(ins) == XED_CATEGORY_AVX)||(INS_category(ins) == XED_CATEGORY_AVX2) || (INS_category(ins) == XED_CATEGORY_AVX2GATHER) || (INS_category(ins) == XED_CATEGORY_AVX512)){
+            else if((INS_Category(ins) == XED_CATEGORY_AVX)||(INS_Category(ins) == XED_CATEGORY_AVX2) || (INS_Category(ins) == XED_CATEGORY_AVX2GATHER) || (INS_Category(ins) == XED_CATEGORY_AVX512)){
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
                 INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countvectorinstructions,IARG_END);
             }
@@ -153,7 +153,7 @@ VOID Trace(TRACE trace, VOID *v)
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
                 INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countconditionalmoves,IARG_END);
             }
-            else if((INS_Category(ins) == XED_CATEGORY_MMX) || (INS_category(ins) == XED_CATEGORY_SSE)){
+            else if((INS_Category(ins) == XED_CATEGORY_MMX) || (INS_Category(ins) == XED_CATEGORY_SSE)){
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
                 INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countmmxandsseinstructions,IARG_END);
             }
