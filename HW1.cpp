@@ -40,6 +40,7 @@ ADDRINT FastForward (void) {
 }
 
 // This function is called before every block
+VOID inccount() { icount ++;}
 VOID docount(UINT32 c) { icount += c;}
 VOID countloads() { loads ++;}
 VOID countstores() { stores ++;}
@@ -95,86 +96,87 @@ VOID Trace(TRACE trace, VOID *v)
         BBL_InsertIfCall(bbl, IPOINT_BEFORE, (AFUNPTR)Terminate, IARG_END);
         BBL_InsertThenCall(bbl, IPOINT_BEFORE, (AFUNPTR)MyExitRoutine, IARG_END);
         BBL_InsertCall(bbl, IPOINT_BEFORE, (AFUNPTR)CheckFastForward, IARG_END);
-        for( INS ins= BBL_InsHead(bbl); INS_Valid(ins); ins = INS_Next(ins) ){
-            UINT32 memOperands = INS_MemoryOperandCount(ins);
-            for (UINT32 memOp = 0; memOp < memOperands; memOp++){
-                if(INS_MemoryOperandIsRead(ins, memOp)){
-                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countloads,IARG_END);
+        if(analyze){
+            for( INS ins= BBL_InsHead(bbl); INS_Valid(ins); ins = INS_Next(ins) ){
+                UINT32 memOperands = INS_MemoryOperandCount(ins);
+                for (UINT32 memOp = 0; memOp < memOperands; memOp++){
+                    if(INS_MemoryOperandIsRead(ins, memOp)){
+                        INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                        INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countloads,IARG_END);
+                    }
+                    if(INS_MemoryOperandIsWritten(ins, memOp)){
+                        INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                        INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countstores,IARG_END);
+                    }
                 }
-                if(INS_MemoryOperandIsWritten(ins, memOp)){
+                if (INS_Category(ins) == XED_CATEGORY_NOP) {
                     INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countstores,IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countnops,IARG_END);
                 }
-            }
-            if (INS_Category(ins) == XED_CATEGORY_NOP) {
-                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countnops,IARG_END);
-            }
-            else if(INS_Category(ins) == XED_CATEGORY_CALL){
-                if(INS_IsDirectCall(ins)){
+                else if(INS_Category(ins) == XED_CATEGORY_CALL){
+                    if(INS_IsDirectCall(ins)){
+                        INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                        INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countdirectcalls,IARG_END);
+                    }
+                    else{
+                        INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                        INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countindirectcalls,IARG_END);
+                    }
+                }
+                else if(INS_Category(ins) == XED_CATEGORY_RET){
                     INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countdirectcalls,IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countreturns,IARG_END);
+                }
+                else if(INS_Category(ins) == XED_CATEGORY_UNCOND_BR){
+                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countunconditionalbranches,IARG_END);
+                }
+                else if(INS_Category(ins) == XED_CATEGORY_COND_BR){
+                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countconditionalbranches,IARG_END);
+                }
+                else if(INS_Category(ins) == XED_CATEGORY_LOGICAL){
+                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countlogicaloperations,IARG_END);
+                }
+                else if((INS_Category(ins) == XED_CATEGORY_ROTATE) || (INS_Category(ins) == XED_CATEGORY_SHIFT)){
+                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countrotateandshiftoperations,IARG_END);
+                }
+                else if(INS_Category(ins) == XED_CATEGORY_FLAGOP){
+                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countflagoperations,IARG_END);
+                }
+                else if((INS_Category(ins) == XED_CATEGORY_AVX)||(INS_Category(ins) == XED_CATEGORY_AVX2) || (INS_Category(ins) == XED_CATEGORY_AVX2GATHER) || (INS_Category(ins) == XED_CATEGORY_AVX512)){
+                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countvectorinstructions,IARG_END);
+                }
+                else if(INS_Category(ins) == XED_CATEGORY_CMOV){
+                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countconditionalmoves,IARG_END);
+                }
+                else if((INS_Category(ins) == XED_CATEGORY_MMX) || (INS_Category(ins) == XED_CATEGORY_SSE)){
+                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countmmxandsseinstructions,IARG_END);
+                }
+                else if(INS_Category(ins) == XED_CATEGORY_SYSCALL){
+                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countsystemcalls,IARG_END);
+                }
+                else if(INS_Category(ins) == XED_CATEGORY_X87_ALU){
+                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countfloatingpointinstructions,IARG_END);
                 }
                 else{
                     INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countindirectcalls,IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countothers,IARG_END);
                 }
-            }
-            else if(INS_Category(ins) == XED_CATEGORY_RET){
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countreturns,IARG_END);
-            }
-            else if(INS_Category(ins) == XED_CATEGORY_UNCOND_BR){
+                INS_InsertThenCall(ins,IPOINT_BEFORE, (AFUNPTR)Analysis,IARG_ADDRINT,INS_Address(ins),IARG_END);
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countunconditionalbranches,IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)PredicatedAnalysis, IARG_ADDRINT,INS_Address(ins),IARG_END);
             }
-            else if(INS_Category(ins) == XED_CATEGORY_COND_BR){
-                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countconditionalbranches,IARG_END);
-            }
-            else if(INS_Category(ins) == XED_CATEGORY_LOGICAL){
-                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countlogicaloperations,IARG_END);
-            }
-            else if((INS_Category(ins) == XED_CATEGORY_ROTATE) || (INS_Category(ins) == XED_CATEGORY_SHIFT)){
-                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countrotateandshiftoperations,IARG_END);
-            }
-            else if(INS_Category(ins) == XED_CATEGORY_FLAGOP){
-                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countflagoperations,IARG_END);
-            }
-            else if((INS_Category(ins) == XED_CATEGORY_AVX)||(INS_Category(ins) == XED_CATEGORY_AVX2) || (INS_Category(ins) == XED_CATEGORY_AVX2GATHER) || (INS_Category(ins) == XED_CATEGORY_AVX512)){
-                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countvectorinstructions,IARG_END);
-            }
-            else if(INS_Category(ins) == XED_CATEGORY_CMOV){
-                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countconditionalmoves,IARG_END);
-            }
-            else if((INS_Category(ins) == XED_CATEGORY_MMX) || (INS_Category(ins) == XED_CATEGORY_SSE)){
-                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countmmxandsseinstructions,IARG_END);
-            }
-            else if(INS_Category(ins) == XED_CATEGORY_SYSCALL){
-                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countsystemcalls,IARG_END);
-            }
-            else if(INS_Category(ins) == XED_CATEGORY_X87_ALU){
-                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countfloatingpointinstructions,IARG_END);
-            }
-            else{
-                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countothers,IARG_END);
-            }
-            INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-            INS_InsertThenCall(ins,IPOINT_BEFORE, (AFUNPTR)Analysis,IARG_ADDRINT,INS_Address(ins),IARG_END);
-            INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-            INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)PredicatedAnalysis, IARG_ADDRINT,INS_Address(ins),IARG_END);
         }
-
         BBL_InsertCall(bbl, IPOINT_BEFORE, (AFUNPTR)docount, IARG_UINT32, BBL_NumIns(bbl), IARG_END);
     }
 
