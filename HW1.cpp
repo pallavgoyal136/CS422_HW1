@@ -1,3 +1,4 @@
+
 using namespace std;
 #include <iostream>
 #include <fstream>
@@ -52,7 +53,8 @@ ADDRINT Terminate(void)
     return (icount >= fast_forward_count + 1000000000);
 }
 ADDRINT CheckFastForward (void) {
-    return analyze=((icount >= fast_forward_count) && (icount < fast_forward_count + 1000000000));
+    return analyze=((icount >= fast_forward_count) && (icount < fast_forward_count +
+1000000000));
 }
 ADDRINT FastForward (void) {
     return analyze;
@@ -120,27 +122,52 @@ VOID InstructionMemAnalysis(UINT64 i, ADDRINT mini, ADDRINT maxi)
 
 
 void MyExitRoutine() {
-    total_instructions = loads + stores + nops + direct_calls + indirect_calls + returns + unconditional_branches + conditional_branches + logical_operations + rotate_and_shift_operations + flag_operations + vector_instructions + conditional_moves + mmx_and_sse_instructions + system_calls + floating_point_instructions + others;
+    total_instructions = loads + stores + nops + direct_calls + indirect_calls +
+returns + unconditional_branches + conditional_branches + logical_operations +
+rotate_and_shift_operations + flag_operations + vector_instructions +
+conditional_moves + mmx_and_sse_instructions + system_calls +
+floating_point_instructions + others;
     OutFile << "===============================================\n";
     OutFile << "Instruction Type Results: \n";
-    OutFile << "Loads: " << loads <<" (" <<(double)loads/(double)total_instructions<<")"<< endl;
-    OutFile << "Stores: " << stores <<" (" <<(double)stores/(double)total_instructions<<")"<< endl;
-    OutFile << "Nops: " << nops <<" (" <<(double)nops/(double)total_instructions<<")"<< endl;
-    OutFile << "Direct Calls: " << direct_calls <<" (" <<(double)direct_calls/(double)total_instructions<<")"<< endl;
-    OutFile << "Indirect Calls: " << indirect_calls <<" (" <<(double)indirect_calls/(double)total_instructions<<")"<< endl;
-    OutFile << "Returns: " << returns <<" (" <<(double)returns/(double)total_instructions<<")"<< endl;
-    OutFile << "Unconditional Branches: " << unconditional_branches <<" (" <<(double)unconditional_branches/(double)total_instructions<<")"<< endl;
-    OutFile << "Conditional Branches: " << conditional_branches <<" (" <<(double)conditional_branches/(double)total_instructions<<")"<< endl;
-    OutFile << "Logical Operations: " << logical_operations <<" (" <<(double)logical_operations/(double)total_instructions<<")"<< endl;
-    OutFile << "Rotate and Shift Operations: " << rotate_and_shift_operations <<" (" <<(double)rotate_and_shift_operations/(double)total_instructions<<")"<< endl;
-    OutFile << "Flag Operations: " << flag_operations <<" (" <<(double)flag_operations/(double)total_instructions<<")"<< endl;
-    OutFile << "Vector Instructions: " << vector_instructions <<" (" <<(double)vector_instructions/(double)total_instructions<<")"<< endl;
-    OutFile << "Conditional Moves: " << conditional_moves <<" (" <<(double)conditional_moves/(double)total_instructions<<")"<< endl;
-    OutFile << "MMX and SSE Instructions: " << mmx_and_sse_instructions <<" (" <<(double)mmx_and_sse_instructions/(double)total_instructions<<")"<< endl;
-    OutFile << "System Calls: " << system_calls <<" (" <<(double)system_calls/(double)total_instructions<<")"<< endl;
-    OutFile << "Floating Point Instructions: " << floating_point_instructions <<" (" <<(double)floating_point_instructions/(double)total_instructions<<")"<< endl;
-    OutFile << "Others: " << others <<" (" <<(double)others/(double)total_instructions<<")"<< endl; 
-    UINT64 cycles= (loads*70) + (stores*70) + nops + direct_calls + indirect_calls + returns + unconditional_branches + conditional_branches + logical_operations + rotate_and_shift_operations + flag_operations + vector_instructions + conditional_moves + mmx_and_sse_instructions + system_calls + floating_point_instructions + others;
+    OutFile << "Loads: " << loads <<" ("
+<<(double)loads/(double)total_instructions<<")"<< endl;
+    OutFile << "Stores: " << stores <<" ("
+<<(double)stores/(double)total_instructions<<")"<< endl;
+    OutFile << "Nops: " << nops <<" ("
+<<(double)nops/(double)total_instructions<<")"<< endl;
+    OutFile << "Direct Calls: " << direct_calls <<" ("
+<<(double)direct_calls/(double)total_instructions<<")"<< endl;
+    OutFile << "Indirect Calls: " << indirect_calls <<" ("
+<<(double)indirect_calls/(double)total_instructions<<")"<< endl;
+    OutFile << "Returns: " << returns <<" ("
+<<(double)returns/(double)total_instructions<<")"<< endl;
+    OutFile << "Unconditional Branches: " << unconditional_branches <<" ("
+<<(double)unconditional_branches/(double)total_instructions<<")"<< endl;
+    OutFile << "Conditional Branches: " << conditional_branches <<" ("
+<<(double)conditional_branches/(double)total_instructions<<")"<< endl;
+    OutFile << "Logical Operations: " << logical_operations <<" ("
+<<(double)logical_operations/(double)total_instructions<<")"<< endl;
+    OutFile << "Rotate and Shift Operations: " << rotate_and_shift_operations <<" ("
+<<(double)rotate_and_shift_operations/(double)total_instructions<<")"<< endl;
+    OutFile << "Flag Operations: " << flag_operations <<" ("
+<<(double)flag_operations/(double)total_instructions<<")"<< endl;
+    OutFile << "Vector Instructions: " << vector_instructions <<" ("
+<<(double)vector_instructions/(double)total_instructions<<")"<< endl;
+    OutFile << "Conditional Moves: " << conditional_moves <<" ("
+<<(double)conditional_moves/(double)total_instructions<<")"<< endl;
+    OutFile << "MMX and SSE Instructions: " << mmx_and_sse_instructions <<" ("
+<<(double)mmx_and_sse_instructions/(double)total_instructions<<")"<< endl;
+    OutFile << "System Calls: " << system_calls <<" ("
+<<(double)system_calls/(double)total_instructions<<")"<< endl;
+    OutFile << "Floating Point Instructions: " << floating_point_instructions <<" ("
+<<(double)floating_point_instructions/(double)total_instructions<<")"<< endl;
+    OutFile << "Others: " << others <<" ("
+<<(double)others/(double)total_instructions<<")"<< endl; 
+    UINT64 cycles= (loads*70) + (stores*70) + nops + direct_calls + indirect_calls +
+returns + unconditional_branches + conditional_branches + logical_operations +
+rotate_and_shift_operations + flag_operations + vector_instructions +
+conditional_moves + mmx_and_sse_instructions + system_calls +
+floating_point_instructions + others;
     OutFile <<"CPI: "<<(double)cycles/(double)total_instructions<<endl;
     OutFile << "===============================================\n";
     OutFile << "Instruction Length Distribution: \n";
@@ -150,34 +177,40 @@ void MyExitRoutine() {
     OutFile << "===============================================\n";
     OutFile << "Instruction Operand Distribution: \n";
     for(auto i:InsNumOpMap){
-        OutFile << "Instruction Num Operands: " << i.first << " Count: " << i.second << endl;
+        OutFile << "Instruction Num Operands: " << i.first << " Count: " << i.second
+<< endl;
     }
     OutFile << "===============================================\n";
     OutFile << "Instruction Read Register Distribution: \n";
     for(auto i:InsRRegMap){
-        OutFile << "Instruction Read Registers: " << i.first << " Count: " << i.second << endl;
+        OutFile << "Instruction Read Registers: " << i.first << " Count: " <<
+i.second << endl;
     }
     OutFile << "===============================================\n";
     OutFile << "Instruction Write Register Distribution: \n";
     for(auto i:InsWRegMap){
-        OutFile << "Instruction Write Registers: " << i.first << " Count: " << i.second << endl;
+        OutFile << "Instruction Write Registers: " << i.first << " Count: " <<
+i.second << endl;
     }
     OutFile << "===============================================\n";
     OutFile << "Instruction Memory Distribution: \n";
     UINT64 memIns=0;
     for(auto i:InsMemOpMap){
-        OutFile << "Instruction Memory Operands: " << i.first << " Count: " << i.second << endl;
+        OutFile << "Instruction Memory Operands: " << i.first << " Count: " <<
+i.second << endl;
         if(i.first>0) memIns+=i.second;
     }
     OutFile << "===============================================\n";
     OutFile << "Instruction Memory Read Distribution: \n";
     for(auto i:InsMemROpMap){
-        OutFile << "Instruction Memory Read Operands: " << i.first << " Count: " << i.second << endl;
+        OutFile << "Instruction Memory Read Operands: " << i.first << " Count: " <<
+i.second << endl;
     }
     OutFile << "===============================================\n";
     OutFile << "Instruction Memory Write Distribution: \n";
     for(auto i:InsMemWOpMap){
-        OutFile << "Instruction Memory Write Operands: " << i.first << " Count: " << i.second << endl;
+        OutFile << "Instruction Memory Write Operands: " << i.first << " Count: " <<
+i.second << endl;
     }
     OutFile << "===============================================\n";
     OutFile << "Instruction Immediate Value Distribution: \n";
@@ -186,7 +219,8 @@ void MyExitRoutine() {
     OutFile << "===============================================\n";
     OutFile << "Instruction Memory Touch Distribution: \n";
     OutFile << "Instruction Memory Touches Max: " << MaxInsMemTouch << endl;
-    OutFile << "Average Instruction Memory Touches: " << (InsMemTouch*1.0)/(memIns) << endl;
+    OutFile << "Average Instruction Memory Touches: " << (InsMemTouch*1.0)/(memIns)
+<< endl;
 
     OutFile << "===============================================\n";
     OutFile << "Instruction Memory Displacement Distribution: \n";
@@ -217,7 +251,8 @@ VOID Trace(TRACE trace, VOID *v)
             UINT32 MemROperands = 0;
             UINT32 MemWOperands = 0;
             UINT64 TotalMem=0;
-            ADDRDELTA insDisplacementMax = INT32_MIN, insDisplacementMin = INT32_MAX, displacementValue;
+            ADDRDELTA insDisplacementMax = INT32_MIN, insDisplacementMin =
+INT32_MAX, displacementValue;
             for (UINT32 memOp = 0; memOp < memOperands; memOp++){
                 UINT32 memopsize=INS_MemoryOperandSize(ins,memOp);
                 TotalMem+=memopsize;
@@ -226,27 +261,35 @@ VOID Trace(TRACE trace, VOID *v)
                 memopsize1=memopsize1/4;
                 if(INS_MemoryOperandIsRead(ins, memOp)){
                     MemROperands++;
-                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countloads,IARG_UINT32,memopsize1,IARG_END);
+                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward,
+IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countloads,IARG_UINT32,memopsize1,IARG_END);
                 }
                 if(INS_MemoryOperandIsWritten(ins, memOp)){
                     MemWOperands++;
-                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countstores,IARG_UINT32,memopsize1,IARG_END);
+                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward,
+IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countstores,IARG_UINT32,memopsize1,IARG_END);
                 }
                 displacementValue = INS_OperandMemoryDisplacement(ins, memOp);
-                if (displacementValue > insDisplacementMax) insDisplacementMax = displacementValue;
-                if (displacementValue < insDisplacementMin) insDisplacementMin = displacementValue;
+                if (displacementValue > insDisplacementMax) insDisplacementMax =
+displacementValue;
+                if (displacementValue < insDisplacementMin) insDisplacementMin =
+displacementValue;
                   
-                
+
                 for (UINT64 addr = 0; addr < memopsize; addr += 32) {
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)MemoryFootprint,IARG_MEMORYOP_EA, memOp, IARG_UINT64, addr, IARG_END);
+                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)MemoryFootprint,IARG_MEMORYOP_EA,
+memOp, IARG_UINT64, addr, IARG_END);
                 }
 
             }
             UINT32 numOperand = INS_OperandCount(ins);
-            INT32 insImmediateMax = INT32_MIN, insImmediateMin = INT32_MAX, immediateValue;
+            INT32 insImmediateMax = INT32_MIN, insImmediateMin = INT32_MAX,
+immediateValue;
             UINT32 flag=0;
             for (UINT32 i = 0; i < numOperand; i++)
             {
@@ -254,8 +297,10 @@ VOID Trace(TRACE trace, VOID *v)
                 {
                     flag=1;
                     immediateValue = (INT32)INS_OperandImmediate(ins, i);
-                    if (immediateValue < insImmediateMin) insImmediateMin = immediateValue;
-                    if (immediateValue > insImmediateMax) insImmediateMax = immediateValue;       
+                    if (immediateValue < insImmediateMin) insImmediateMin =
+immediateValue;
+                    if (immediateValue > insImmediateMax) insImmediateMax =
+immediateValue;       
                 }
             }
 
@@ -264,95 +309,305 @@ VOID Trace(TRACE trace, VOID *v)
             UINT64 InsAddr = INS_Address(ins);
             for (UINT64 addr = InsAddr; addr < (InsAddr + InsSize); addr += 32) {
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionFootprint,IARG_UINT64,addr/32, IARG_END);
+                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionFootprint,IARG_UINT64,addr/32,
+IARG_END);
             }
             INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-            INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionDistribution,IARG_UINT32,InsSize, IARG_UINT32, INS_OperandCount(ins), IARG_UINT32,INS_MaxNumRRegs(ins),IARG_UINT32,INS_MaxNumWRegs(ins), IARG_END);
+            INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionDistribution,IARG_UINT32,InsSize,
+IARG_UINT32, INS_OperandCount(ins),
+IARG_UINT32,INS_MaxNumRRegs(ins),IARG_UINT32,INS_MaxNumWRegs(ins),
+IARG_END);
             //  
             if(flag==1){
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionImmDistribution, IARG_ADDRINT,(IARG_ADDRINT)insImmediateMin,IARG_ADDRINT,(IARG_ADDRINT)insImmediateMax, IARG_END);
-                // if((INT32)<ImmediateMin) ImmediateMin=(INT32)mini;
-                // if((INT32)maxi>ImmediateMax) ImmediateMax=(INT32)maxi;
+                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionImmDistribution,
+IARG_ADDRINT,(ADDRINT)insImmediateMin,IARG_ADDRINT,(ADDRINT)insImmediateMax,
+IARG_END);
             }
            
             INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-            INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionMemDistribution,IARG_UINT32,MemROperands+MemWOperands,IARG_UINT32,MemROperands,IARG_UINT32,MemWOperands, IARG_END);
+            INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionMemDistribution,IARG_UINT32,MemROperands+MemWOperands,IARG_UINT32,MemROperands,IARG_UINT32,MemWOperands,
+IARG_END);
             
             if(memOperands>=1)
             {
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionMemAnalysis,IARG_UINT64,TotalMem, IARG_ADDRINT,(IARG_ADDRINT)insDisplacementMin, IARG_ADDRINT,(IARG_ADDRINT)insDisplacementMax, IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionMemAnalysis,IARG_UINT64,TotalMem,
+IARG_ADDRINT,(ADDRINT)insDisplacementMin,
+IARG_ADDRINT,(ADDRINT)insDisplacementMax, IARG_END);
             }
 
             if (INS_Category(ins) == XED_CATEGORY_NOP) {
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countnops,IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countnops,IARG_END);
             }
             else if(INS_Category(ins) == XED_CATEGORY_CALL){
                 if(INS_IsDirectCall(ins)){
-                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countdirectcalls,IARG_END);
+                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward,
+IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countdirectcalls,IARG_END);
                 }
                 else{
-                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countindirectcalls,IARG_END);
+                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward,
+IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countindirectcalls,IARG_END);
                 }
             }
             else if(INS_Category(ins) == XED_CATEGORY_RET){
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countreturns,IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countreturns,IARG_END);
             }
             else if(INS_Category(ins) == XED_CATEGORY_UNCOND_BR){
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countunconditionalbranches,IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countunconditionalbranches,IARG_END);
             }
             else if(INS_Category(ins) == XED_CATEGORY_COND_BR){
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countconditionalbranches,IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countconditionalbranches,IARG_END);
             }
             else if(INS_Category(ins) == XED_CATEGORY_LOGICAL){
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countlogicaloperations,IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countlogicaloperations,IARG_END);
             }
-            else if((INS_Category(ins) == XED_CATEGORY_ROTATE) || (INS_Category(ins) == XED_CATEGORY_SHIFT)){
+            else if((INS_Category(ins) == XED_CATEGORY_ROTATE) || (INS_Category(ins)
+== XED_CATEGORY_SHIFT)){
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countrotateandshiftoperations,IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countrotateandshiftoperations,IARG_END);
             }
             else if(INS_Category(ins) == XED_CATEGORY_FLAGOP){
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countflagoperations,IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countflagoperations,IARG_END);
             }
-            else if((INS_Category(ins) == XED_CATEGORY_AVX)||(INS_Category(ins) == XED_CATEGORY_AVX2) || (INS_Category(ins) == XED_CATEGORY_AVX2GATHER) || (INS_Category(ins) == XED_CATEGORY_AVX512)){
+            else if((INS_Category(ins) == XED_CATEGORY_AVX)||(INS_Category(ins) ==
+XED_CATEGORY_AVX2) || (INS_Category(ins) == XED_CATEGORY_AVX2GATHER) ||
+(INS_Category(ins) == XED_CATEGORY_AVX512)){
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countvectorinstructions,IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countvectorinstructions,IARG_END);
             }
             else if(INS_Category(ins) == XED_CATEGORY_CMOV){
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countconditionalmoves,IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countconditionalmoves,IARG_END);
             }
-            else if((INS_Category(ins) == XED_CATEGORY_MMX) || (INS_Category(ins) == XED_CATEGORY_SSE)){
+            else if((INS_Category(ins) == XED_CATEGORY_MMX) || (INS_Category(ins) ==
+XED_CATEGORY_SSE)){
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countmmxandsseinstructions,IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countmmxandsseinstructions,IARG_END);
             }
             else if(INS_Category(ins) == XED_CATEGORY_SYSCALL){
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countsystemcalls,IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countsystemcalls,IARG_END);
             }
             else if(INS_Category(ins) == XED_CATEGORY_X87_ALU){
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countfloatingpointinstructions,IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countfloatingpointinstructions,IARG_END);
             }
             else{
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countothers,IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countothers,IARG_END);
             }
            
         }
-        BBL_InsertCall(bbl, IPOINT_BEFORE, (AFUNPTR)docount, IARG_UINT32, BBL_NumIns(bbl), IARG_END);
+        BBL_InsertCall(bbl, IPOINT_BEFORE, (AFUNPTR)docount, IARG_UINT32,
+BBL_NumIns(bbl), IARG_END);
     }
 
 
+}
+VOID Instruction(INS ins, VOID *v)
+{
+    // Insert a call to docount before every instruction, no arguments are passed
+    INS_InsertIfCall(ins, IPOINT_BEFORE, (AFUNPTR)Terminate, IARG_END);
+    INS_InsertThenCall(ins, IPOINT_BEFORE, (AFUNPTR)MyExitRoutine, IARG_END);
+    INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)CheckFastForward, IARG_END);
+    UINT32 memOperands = INS_MemoryOperandCount(ins);
+            UINT32 MemROperands = 0;
+            UINT32 MemWOperands = 0;
+            UINT64 TotalMem=0;
+            ADDRDELTA insDisplacementMax = INT32_MIN, insDisplacementMin =
+INT32_MAX, displacementValue;
+            for (UINT32 memOp = 0; memOp < memOperands; memOp++){
+                UINT32 memopsize=INS_MemoryOperandSize(ins,memOp);
+                TotalMem+=memopsize;
+                UINT32 memopsize1;
+                memopsize1=memopsize+3;
+                memopsize1=memopsize1/4;
+                if(INS_MemoryOperandIsRead(ins, memOp)){
+                    MemROperands++;
+                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward,
+IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countloads,IARG_UINT32,memopsize1,IARG_END);
+                }
+                if(INS_MemoryOperandIsWritten(ins, memOp)){
+                    MemWOperands++;
+                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward,
+IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countstores,IARG_UINT32,memopsize1,IARG_END);
+                }
+                displacementValue = INS_OperandMemoryDisplacement(ins, memOp);
+                if (displacementValue > insDisplacementMax) insDisplacementMax =
+displacementValue;
+                if (displacementValue < insDisplacementMin) insDisplacementMin =
+displacementValue;
+                  
+
+                for (UINT64 addr = 0; addr < memopsize; addr += 32) {
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)MemoryFootprint,IARG_MEMORYOP_EA,
+memOp, IARG_UINT64, addr, IARG_END);
+                }
+
+            }
+            UINT32 numOperand = INS_OperandCount(ins);
+            INT32 insImmediateMax = INT32_MIN, insImmediateMin = INT32_MAX,
+immediateValue;
+            UINT32 flag=0;
+            for (UINT32 i = 0; i < numOperand; i++)
+            {
+                if (INS_OperandIsImmediate(ins, i))
+                {
+                    flag=1;
+                    immediateValue = (INT32)INS_OperandImmediate(ins, i);
+                    if (immediateValue < insImmediateMin) insImmediateMin =
+immediateValue;
+                    if (immediateValue > insImmediateMax) insImmediateMax =
+immediateValue;       
+                }
+            }
+
+
+            UINT32 InsSize = INS_Size(ins);    
+            UINT64 InsAddr = INS_Address(ins);
+            for (UINT64 addr = InsAddr; addr < (InsAddr + InsSize); addr += 32) {
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionFootprint,IARG_UINT64,addr/32,
+IARG_END);
+            }
+            INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+            INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionDistribution,IARG_UINT32,InsSize,
+IARG_UINT32, INS_OperandCount(ins),
+IARG_UINT32,INS_MaxNumRRegs(ins),IARG_UINT32,INS_MaxNumWRegs(ins),
+IARG_END);
+            //  
+            if(flag==1){
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionImmDistribution,
+IARG_ADDRINT,(ADDRINT)insImmediateMin,IARG_ADDRINT,(ADDRINT)insImmediateMax,
+IARG_END);
+            }
+           
+            INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+            INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionMemDistribution,IARG_UINT32,MemROperands+MemWOperands,IARG_UINT32,MemROperands,IARG_UINT32,MemWOperands,
+IARG_END);
+            
+            if(memOperands>=1)
+            {
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionMemAnalysis,IARG_UINT64,TotalMem,
+IARG_ADDRINT,(ADDRINT)insDisplacementMin,
+IARG_ADDRINT,(ADDRINT)insDisplacementMax, IARG_END);
+            }
+
+            if (INS_Category(ins) == XED_CATEGORY_NOP) {
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countnops,IARG_END);
+            }
+            else if(INS_Category(ins) == XED_CATEGORY_CALL){
+                if(INS_IsDirectCall(ins)){
+                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward,
+IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countdirectcalls,IARG_END);
+                }
+                else{
+                    INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward,
+IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countindirectcalls,IARG_END);
+                }
+            }
+            else if(INS_Category(ins) == XED_CATEGORY_RET){
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countreturns,IARG_END);
+            }
+            else if(INS_Category(ins) == XED_CATEGORY_UNCOND_BR){
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countunconditionalbranches,IARG_END);
+            }
+            else if(INS_Category(ins) == XED_CATEGORY_COND_BR){
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countconditionalbranches,IARG_END);
+            }
+            else if(INS_Category(ins) == XED_CATEGORY_LOGICAL){
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countlogicaloperations,IARG_END);
+            }
+            else if((INS_Category(ins) == XED_CATEGORY_ROTATE) || (INS_Category(ins)
+== XED_CATEGORY_SHIFT)){
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countrotateandshiftoperations,IARG_END);
+            }
+            else if(INS_Category(ins) == XED_CATEGORY_FLAGOP){
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countflagoperations,IARG_END);
+            }
+            else if((INS_Category(ins) == XED_CATEGORY_AVX)||(INS_Category(ins) ==
+XED_CATEGORY_AVX2) || (INS_Category(ins) == XED_CATEGORY_AVX2GATHER) ||
+(INS_Category(ins) == XED_CATEGORY_AVX512)){
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countvectorinstructions,IARG_END);
+            }
+            else if(INS_Category(ins) == XED_CATEGORY_CMOV){
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countconditionalmoves,IARG_END);
+            }
+            else if((INS_Category(ins) == XED_CATEGORY_MMX) || (INS_Category(ins) ==
+XED_CATEGORY_SSE)){
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countmmxandsseinstructions,IARG_END);
+            }
+            else if(INS_Category(ins) == XED_CATEGORY_SYSCALL){
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countsystemcalls,IARG_END);
+            }
+            else if(INS_Category(ins) == XED_CATEGORY_X87_ALU){
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countfloatingpointinstructions,IARG_END);
+            }
+            else{
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,
+(AFUNPTR)countothers,IARG_END);
+            }
+    INS_InsertCall(ins, IPOINT_BEFORE, (AFUNPTR)inccount, IARG_END);
 }
 
 KNOB<string> KnobOutputFile(KNOB_MODE_WRITEONCE, "pintool",
@@ -397,8 +652,8 @@ int main(int argc, char * argv[])
     fast_forward_count = fast_forward_count * 1000000000ULL;
     startTime = std::chrono::system_clock::now();
     // Register Instruction to be called to instrument instructions
-    TRACE_AddInstrumentFunction(Trace, 0);
-
+    // TRACE_AddInstrumentFunction(Trace, 0);
+    INS_AddInstrumentFunction(Instruction, 0);
     // Register Fini to be called when the application exits
     PIN_AddFiniFunction(Fini, 0);
     
