@@ -3,6 +3,7 @@ using namespace std;
 #include <fstream>
 #include "pin.H"
 #include<unordered_set>
+#include<unordered_map>
 ofstream OutFile;
 
 // The running count of instructions is kept here
@@ -27,8 +28,24 @@ static UINT64 system_calls=0;
 static UINT64 floating_point_instructions=0;
 static UINT64 others=0;
 static UINT64 total_instructions=0;
+static UINT64 InsMemTouch=0;
+static UINT64 MaxInsMemTouch=0;
+static INT32 ImmediateMax = INT32_MIN;
+static INT32 ImmediateMin = INT32_MAX;
+static ADDRDELTA MaxDisplacement = INT32_MIN;
+static ADDRDELTA MinDisplacement = INT32_MAX;
 static unordered_set<UINT64> InsMemFootPrint;
 static unordered_set<UINT64> DataMemFootPrint;
+static unordered_map<UINT64,UINT64> InsLengthMap;
+static unordered_map<UINT64,UINT64> InsNumOpMap;
+static unordered_map<UINT64,UINT64> InsRRegMap;
+static unordered_map<UINT64,UINT64> InsWRegMap;
+static unordered_map<UINT64,UINT64> InsMemOpMap;
+static unordered_map<UINT64,UINT64> InsMemROpMap;
+static unordered_map<UINT64,UINT64> InsMemWOpMap;
+std::chrono::time_point<std::chrono::system_clock> startTime;
+std::chrono::time_point<std::chrono::system_clock> endTime;
+
 // This function is called before every instruction is executed
 ADDRINT Terminate(void)
 {
@@ -69,6 +86,37 @@ VOID MemoryFootprint(ADDRINT i, UINT32 j)
 {
     DataMemFootPrint.insert(((UINT64)i + j)/32);
 }
+VOID InstructionDistribution(UINT32 i, UINT32 j, UINT32 k, UINT32 l)
+{
+    InsLengthMap[i]++;
+    InsNumOpMap[j]++;
+    InsRRegMap[k]++;
+    InsWRegMap[l]++;
+    // if(mini<ImmediateMin) ImmediateMin=mini;
+    // if(maxi>ImmediateMax) ImmediateMax=maxi;
+}
+VOID InstructionMemDistribution(UINT32 i, UINT32 j, UINT32 k)
+{
+    InsMemOpMap[i]++;
+    InsMemROpMap[j]++;
+    InsMemWOpMap[k]++;
+    // InsMemTouch+=l;
+    // if(l>MaxInsMemTouch) MaxInsMemTouch=l;
+    // if(mini<MinDisplacement) MinDisplacement=mini;
+    // if(maxi>MaxDisplacement) MaxDisplacement=maxi;
+}
+VOID InstructionImmDistribution(INT32 mini, INT32 maxi)
+{
+    if(mini<ImmediateMin) ImmediateMin=mini;
+    if(maxi>ImmediateMax) ImmediateMax=maxi;
+}
+VOID InstructionMemAnalysis(UINT64 i, ADDRDELTA mini, ADDRDELTA maxi)
+{
+    InsMemTouch+=i;
+    if(i>MaxInsMemTouch) MaxInsMemTouch=i;
+    if(mini<MinDisplacement) MinDisplacement=mini;
+    if(maxi>MaxDisplacement) MaxDisplacement=maxi;
+}
 
 
 void MyExitRoutine() {
@@ -94,8 +142,64 @@ void MyExitRoutine() {
     OutFile << "Others: " << others <<" (" <<(double)others/(double)total_instructions<<")"<< endl; 
     UINT64 cycles= (loads*70) + (stores*70) + nops + direct_calls + indirect_calls + returns + unconditional_branches + conditional_branches + logical_operations + rotate_and_shift_operations + flag_operations + vector_instructions + conditional_moves + mmx_and_sse_instructions + system_calls + floating_point_instructions + others;
     OutFile <<"CPI: "<<(double)cycles/(double)total_instructions<<endl;
+    OutFile << "===============================================\n";
+    OutFile << "Instruction Length Distribution: \n";
+    for(auto i:InsLengthMap){
+        OutFile << "Instruction Length: " << i.first << " Count: " << i.second << endl;
+    }
+    OutFile << "===============================================\n";
+    OutFile << "Instruction Operand Distribution: \n";
+    for(auto i:InsNumOpMap){
+        OutFile << "Instruction Num Operands: " << i.first << " Count: " << i.second << endl;
+    }
+    OutFile << "===============================================\n";
+    OutFile << "Instruction Read Register Distribution: \n";
+    for(auto i:InsRRegMap){
+        OutFile << "Instruction Read Registers: " << i.first << " Count: " << i.second << endl;
+    }
+    OutFile << "===============================================\n";
+    OutFile << "Instruction Write Register Distribution: \n";
+    for(auto i:InsWRegMap){
+        OutFile << "Instruction Write Registers: " << i.first << " Count: " << i.second << endl;
+    }
+    OutFile << "===============================================\n";
+    OutFile << "Instruction Memory Distribution: \n";
+    UINT64 memIns=0;
+    for(auto i:InsMemOpMap){
+        OutFile << "Instruction Memory Operands: " << i.first << " Count: " << i.second << endl;
+        if(i.first>0) memIns+=i.second;
+    }
+    OutFile << "===============================================\n";
+    OutFile << "Instruction Memory Read Distribution: \n";
+    for(auto i:InsMemROpMap){
+        OutFile << "Instruction Memory Read Operands: " << i.first << " Count: " << i.second << endl;
+    }
+    OutFile << "===============================================\n";
+    OutFile << "Instruction Memory Write Distribution: \n";
+    for(auto i:InsMemWOpMap){
+        OutFile << "Instruction Memory Write Operands: " << i.first << " Count: " << i.second << endl;
+    }
+    OutFile << "===============================================\n";
+    OutFile << "Instruction Immediate Value Distribution: \n";
+    OutFile << "Instruction Immediate Value Min: " << ImmediateMin << endl;
+    OutFile << "Instruction Immediate Value Max: " << ImmediateMax << endl;
+    OutFile << "===============================================\n";
+    OutFile << "Instruction Memory Touch Distribution: \n";
+    OutFile << "Instruction Memory Touches Max: " << MaxInsMemTouch << endl;
+    OutFile << "Average Instruction Memory Touches: " << (InsMemTouch*1.0)/(memIns) << endl;
+
+    OutFile << "===============================================\n";
+    OutFile << "Instruction Memory Displacement Distribution: \n";
+    OutFile << "Instruction Memory Displacement Min: " << MinDisplacement << endl;
+    OutFile << "Instruction Memory Displacement Max: " << MaxDisplacement << endl;
+    OutFile << "===============================================\n";
+
     OutFile << "Instruction Blocks accesses: " << InsMemFootPrint.size()  << endl;
     OutFile << "Memory Blocks accesses: " << DataMemFootPrint.size()  << endl;
+
+    endTime = std::chrono::system_clock::now();
+    std::chrono::duration<double> elapsed_seconds = endTime - startTime;
+    OutFile << "Time in minutes: " << elapsed_seconds.count()/60 << "s\n";
     OutFile.close();
     exit(0);
 }    
@@ -110,30 +214,73 @@ VOID Trace(TRACE trace, VOID *v)
         for( INS ins= BBL_InsHead(bbl); INS_Valid(ins); ins = INS_Next(ins) ){
             // INS_InsertCall(ins,IPOINT_BEFORE, (AFUNPTR)inccount,IARG_END);
             UINT32 memOperands = INS_MemoryOperandCount(ins);
+            UINT32 MemROperands = 0;
+            UINT32 MemWOperands = 0;
+            UINT32 TotalMem=0;
+            ADDRDELTA insDisplacementMax = INT32_MIN, insDisplacementMin = INT32_MAX, displacementValue;
             for (UINT32 memOp = 0; memOp < memOperands; memOp++){
                 UINT32 memopsize=INS_MemoryOperandSize(ins,memOp);
+                TotalMem+=memopsize;
                 UINT32 memopsize1;
                 memopsize1=memopsize+3;
                 memopsize1=memopsize1/4;
                 if(INS_MemoryOperandIsRead(ins, memOp)){
+                    MemROperands++;
                     INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countloads,IARG_UINT32,memopsize,IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countloads,IARG_UINT32,memopsize1,IARG_END);
                 }
                 if(INS_MemoryOperandIsWritten(ins, memOp)){
+                    MemWOperands++;
                     INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countstores,IARG_UINT32,memopsize,IARG_END);
+                    INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countstores,IARG_UINT32,memopsize1,IARG_END);
                 }
+                displacementValue = INS_OperandMemoryDisplacement(ins, memOp);
+                if (displacementValue > insDisplacementMax) insDisplacementMax = displacementValue;
+                if (displacementValue < insDisplacementMin) insDisplacementMin = displacementValue;
+                  
+
                 for (UINT64 addr = 0; addr < memopsize; addr += 32) {
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
                 INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)MemoryFootprint,IARG_MEMORYOP_EA, memOp, IARG_UINT32, addr, IARG_END);
                 }
 
             }
+            UINT32 numOperand = INS_OperandCount(ins);
+            INT32 insImmediateMax = INT32_MIN, insImmediateMin = INT32_MAX, immediateValue;
+            UINT32 flag=0;
+            for (UINT32 i = 0; i < numOperand; i++)
+            {
+                if (INS_OperandIsImmediate(ins, i))
+                {
+                    flag=1;
+                    immediateValue = (INT32)INS_OperandImmediate(ins, i);
+                    if (immediateValue < insImmediateMin) insImmediateMin = immediateValue;
+                    if (immediateValue > insImmediateMax) insImmediateMax = immediateValue;       
+                }
+            }
+
+
             UINT32 InsSize = INS_Size(ins);    
             UINT64 InsAddr = INS_Address(ins);
             for (UINT64 addr = InsAddr; addr < (InsAddr + InsSize); addr += 32) {
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
                 INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionFootprint,IARG_UINT64,addr/32, IARG_END);
+            }
+            INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+            INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionDistribution,IARG_UINT32,InsSize, IARG_UINT32, INS_OperandCount(ins), IARG_UINT32,INS_MaxNumRRegs(ins),IARG_UINT32,INS_MaxNumWRegs(ins), IARG_END);
+            //  
+            if(flag==1){
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionImmDistribution, IARG_ADDRINT,insImmediateMin,IARG_ADDRINT,insImmediateMax, IARG_END);
+            }
+           
+            INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+            INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionMemDistribution,IARG_UINT32,MemROperands+MemWOperands,IARG_UINT32,MemROperands,IARG_UINT32,MemWOperands, IARG_END);
+            
+            if(memOperands>=1)
+            {
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionMemAnalysis,IARG_UINT64,TotalMem, IARG_ADDRINT,insDisplacementMin, IARG_ADDRINT,insDisplacementMax, IARG_END);
             }
 
             if (INS_Category(ins) == XED_CATEGORY_NOP) {
@@ -245,7 +392,8 @@ int main(int argc, char * argv[])
 
     OutFile.open(KnobOutputFile.Value().c_str());
     fast_forward_count = KnobForwardCount.Value();
-    fast_forward_count = fast_forward_count * (UINT)(1000000000);
+    fast_forward_count = fast_forward_count * 1000000000ULL;
+    startTime = std::chrono::system_clock::now();
     // Register Instruction to be called to instrument instructions
     TRACE_AddInstrumentFunction(Trace, 0);
 
