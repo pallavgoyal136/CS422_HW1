@@ -105,17 +105,17 @@ VOID InstructionMemDistribution(UINT32 i, UINT32 j, UINT32 k)
     // if(mini<MinDisplacement) MinDisplacement=mini;
     // if(maxi>MaxDisplacement) MaxDisplacement=maxi;
 }
-VOID InstructionImmDistribution(INT32 mini, INT32 maxi)
+VOID InstructionImmDistribution(ADDRINT mini, ADDRINT maxi)
 {
-    if(mini<ImmediateMin) ImmediateMin=mini;
-    if(maxi>ImmediateMax) ImmediateMax=maxi;
+    if((INT32)mini<ImmediateMin) ImmediateMin=mini;
+    if((INT32)maxi>ImmediateMax) ImmediateMax=maxi;
 }
-VOID InstructionMemAnalysis(UINT64 i, ADDRDELTA mini, ADDRDELTA maxi)
+VOID InstructionMemAnalysis(UINT64 i, ADDRINT mini, ADDRINT maxi)
 {
     InsMemTouch+=i;
     if(i>MaxInsMemTouch) MaxInsMemTouch=i;
-    if(mini<MinDisplacement) MinDisplacement=mini;
-    if(maxi>MaxDisplacement) MaxDisplacement=maxi;
+    if((ADDRDELTA)mini<MinDisplacement) MinDisplacement=mini;
+    if((ADDRDELTA)maxi>MaxDisplacement) MaxDisplacement=maxi;
 }
 
 
@@ -271,7 +271,7 @@ VOID Trace(TRACE trace, VOID *v)
             //  
             if(flag==1){
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionImmDistribution, IARG_ADDRINT,insImmediateMin,IARG_ADDRINT,insImmediateMax, IARG_END);
+                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionImmDistribution, IARG_ADDRINT,(IARG_ADDRINT)insImmediateMin,IARG_ADDRINT,(IARG_ADDRINT)insImmediateMax, IARG_END);
             }
            
             INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
@@ -280,7 +280,7 @@ VOID Trace(TRACE trace, VOID *v)
             if(memOperands>=1)
             {
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionMemAnalysis,IARG_UINT64,TotalMem, IARG_ADDRINT,insDisplacementMin, IARG_ADDRINT,insDisplacementMax, IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionMemAnalysis,IARG_UINT64,TotalMem, IARG_ADDRINT,(IARG_ADDRINT)insDisplacementMin, IARG_ADDRINT,(IARG_ADDRINT)insDisplacementMax, IARG_END);
             }
 
             if (INS_Category(ins) == XED_CATEGORY_NOP) {
