@@ -109,11 +109,10 @@ VOID InstructionDistribution(UINT32 i, UINT32 j, UINT32 k, UINT32 l)
     // if(mini<ImmediateMin) ImmediateMin=mini;
     // if(maxi>ImmediateMax) ImmediateMax=maxi;
 }
-VOID InstructionMemDistribution(UINT32 i, UINT32 j, UINT32 k)
+VOID InstructionMemDistribution(UINT32 i)
 {
     InsMemOpMap[i]++;
-    InsMemROpMap[j]++;
-    InsMemWOpMap[k]++;
+    
     // InsMemTouch+=l;
     // if(l>MaxInsMemTouch) MaxInsMemTouch=l;
     // if(mini<MinDisplacement) MinDisplacement=mini;
@@ -124,9 +123,11 @@ VOID InstructionImmDistribution(ADDRINT mini, ADDRINT maxi)
     if((INT32)mini<ImmediateMin) ImmediateMin=(INT32)mini;
     if((INT32)maxi>ImmediateMax) ImmediateMax=(INT32)maxi;
 }
-VOID InstructionMemAnalysis(UINT64 i, ADDRINT mini, ADDRINT maxi)
+VOID InstructionMemAnalysis(UINT64 i, ADDRINT mini, ADDRINT maxi, UINT32 memROp, UINT32 memWOp)
 {
     InsMemTouch+=i;
+    InsMemROpMap[memROp]++;
+    InsMemWOpMap[memWOp]++;
     if(i>MaxInsMemTouch) MaxInsMemTouch=i;
     if((ADDRDELTA)mini<MinDisplacement) MinDisplacement=(ADDRDELTA)mini;
     if((ADDRDELTA)maxi>MaxDisplacement) MaxDisplacement=(ADDRDELTA)maxi;
@@ -294,12 +295,12 @@ VOID Trace(TRACE trace, VOID *v)
             }
            
             INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-            INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionMemDistribution,IARG_UINT32,MemROperands+MemWOperands,IARG_UINT32,MemROperands,IARG_UINT32,MemWOperands, IARG_END);
+            INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionMemDistribution,IARG_UINT32,MemROperands+MemWOperands, IARG_END);
             
             if(memOperands>=1)
             {
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionMemAnalysis,IARG_UINT64,TotalMem, IARG_ADDRINT,(ADDRINT)insDisplacementMin, IARG_ADDRINT,(ADDRINT)insDisplacementMax, IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionMemAnalysis,IARG_UINT64,TotalMem, IARG_ADDRINT,(ADDRINT)insDisplacementMin, IARG_ADDRINT,(ADDRINT)insDisplacementMax,IARG_UINT32,MemROperands,IARG_UINT32,MemWOperands, IARG_END);
                 
             }
 
