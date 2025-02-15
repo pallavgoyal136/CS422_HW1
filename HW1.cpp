@@ -107,15 +107,15 @@ VOID InstructionMemDistribution(UINT32 i, UINT32 j, UINT32 k)
 }
 VOID InstructionImmDistribution(ADDRINT mini, ADDRINT maxi)
 {
-    if((INT32)mini<ImmediateMin) ImmediateMin=mini;
-    if((INT32)maxi>ImmediateMax) ImmediateMax=maxi;
+    if((INT32)mini<ImmediateMin) ImmediateMin=(INT32)mini;
+    if((INT32)maxi>ImmediateMax) ImmediateMax=(INT32)maxi;
 }
 VOID InstructionMemAnalysis(UINT64 i, ADDRINT mini, ADDRINT maxi)
 {
     InsMemTouch+=i;
     if(i>MaxInsMemTouch) MaxInsMemTouch=i;
-    if((ADDRDELTA)mini<MinDisplacement) MinDisplacement=mini;
-    if((ADDRDELTA)maxi>MaxDisplacement) MaxDisplacement=maxi;
+    if((ADDRDELTA)mini<MinDisplacement) MinDisplacement=(ADDRDELTA)mini;
+    if((ADDRDELTA)maxi>MaxDisplacement) MaxDisplacement=(ADDRDELTA)maxi;
 }
 
 
