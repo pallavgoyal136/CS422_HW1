@@ -216,7 +216,7 @@ VOID Trace(TRACE trace, VOID *v)
             UINT32 memOperands = INS_MemoryOperandCount(ins);
             UINT32 MemROperands = 0;
             UINT32 MemWOperands = 0;
-            UINT32 TotalMem=0;
+            UINT64 TotalMem=0;
             ADDRDELTA insDisplacementMax = INT32_MIN, insDisplacementMin = INT32_MAX, displacementValue;
             for (UINT32 memOp = 0; memOp < memOperands; memOp++){
                 UINT32 memopsize=INS_MemoryOperandSize(ins,memOp);
@@ -238,10 +238,10 @@ VOID Trace(TRACE trace, VOID *v)
                 if (displacementValue > insDisplacementMax) insDisplacementMax = displacementValue;
                 if (displacementValue < insDisplacementMin) insDisplacementMin = displacementValue;
                   
-
+                
                 for (UINT64 addr = 0; addr < memopsize; addr += 32) {
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)MemoryFootprint,IARG_MEMORYOP_EA, memOp, IARG_UINT32, addr, IARG_END);
+                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)MemoryFootprint,IARG_MEMORYOP_EA, memOp, IARG_UINT64, addr, IARG_END);
                 }
 
             }
@@ -272,6 +272,8 @@ VOID Trace(TRACE trace, VOID *v)
             if(flag==1){
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
                 INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionImmDistribution, IARG_ADDRINT,(IARG_ADDRINT)insImmediateMin,IARG_ADDRINT,(IARG_ADDRINT)insImmediateMax, IARG_END);
+                // if((INT32)<ImmediateMin) ImmediateMin=(INT32)mini;
+                // if((INT32)maxi>ImmediateMax) ImmediateMax=(INT32)maxi;
             }
            
             INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
