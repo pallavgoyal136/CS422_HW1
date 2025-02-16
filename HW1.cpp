@@ -37,13 +37,26 @@ static ADDRDELTA MaxDisplacement = INT32_MIN;
 static ADDRDELTA MinDisplacement = INT32_MAX;
 static unordered_set<UINT64> InsMemFootPrint;
 static unordered_set<UINT64> DataMemFootPrint;
-static unordered_map<UINT64,UINT64> InsLengthMap;
-static unordered_map<UINT64,UINT64> InsNumOpMap;
-static unordered_map<UINT64,UINT64> InsRRegMap;
-static unordered_map<UINT64,UINT64> InsWRegMap;
-static unordered_map<UINT64,UINT64> InsMemOpMap;
-static unordered_map<UINT64,UINT64> InsMemROpMap;
-static unordered_map<UINT64,UINT64> InsMemWOpMap;
+// static unordered_map<UINT64,UINT64> InsLengthMap;
+// static unordered_map<UINT64,UINT64> InsNumOpMap;
+// static unordered_map<UINT64,UINT64> InsRRegMap;
+// static unordered_map<UINT64,UINT64> InsWRegMap;
+// static unordered_map<UINT64,UINT64> InsMemOpMap;
+// static unordered_map<UINT64,UINT64> InsMemROpMap;
+// static unordered_map<UINT64,UINT64> InsMemWOpMap;
+const UINT64 MAX_INS_LENGTH = 16;       // Maximum instruction length
+const UINT64 MAX_NUM_OPERANDS = 16;     // Maximum number of operands
+const UINT64 MAX_NUM_REGISTERS = 16;    // Maximum number of registers
+const UINT64 MAX_MEM_OPERANDS = 10;     // Maximum memory operands
+
+// Global arrays to replace unordered_map
+static UINT64 InsLengthMap[MAX_INS_LENGTH] = {0};
+static UINT64 InsNumOpMap[MAX_NUM_OPERANDS] = {0};
+static UINT64 InsRRegMap[MAX_NUM_REGISTERS] = {0};
+static UINT64 InsWRegMap[MAX_NUM_REGISTERS] = {0};
+static UINT64 InsMemOpMap[MAX_MEM_OPERANDS] = {0};
+static UINT64 InsMemROpMap[MAX_MEM_OPERANDS] = {0};
+static UINT64 InsMemWOpMap[MAX_MEM_OPERANDS] = {0};
 std::chrono::time_point<std::chrono::system_clock> startTime;
 std::chrono::time_point<std::chrono::system_clock> endTime;
 
@@ -86,8 +99,9 @@ VOID InstructionFootprint(UINT64 i)
 }
 VOID MemoryFootprint(ADDRINT i, UINT32 j)
 {
-    DataMemFootPrint.insert(((UINT64)i + j)/32);
+    for(ADDRINT addr = i/32; addr<=(i+j-1)/32; addr+=1)  DataMemFootPrint.insert(addr);    
 }
+
 VOID InstructionDistribution(UINT32 i, UINT32 j, UINT32 k, UINT32 l)
 {
     InsLengthMap[i]++;
@@ -97,11 +111,10 @@ VOID InstructionDistribution(UINT32 i, UINT32 j, UINT32 k, UINT32 l)
     // if(mini<ImmediateMin) ImmediateMin=mini;
     // if(maxi>ImmediateMax) ImmediateMax=maxi;
 }
-VOID InstructionMemDistribution(UINT32 i, UINT32 j, UINT32 k)
+VOID InstructionMemDistribution(UINT32 i)
 {
     InsMemOpMap[i]++;
-    InsMemROpMap[j]++;
-    InsMemWOpMap[k]++;
+    
     // InsMemTouch+=l;
     // if(l>MaxInsMemTouch) MaxInsMemTouch=l;
     // if(mini<MinDisplacement) MinDisplacement=mini;
@@ -112,9 +125,11 @@ VOID InstructionImmDistribution(ADDRINT mini, ADDRINT maxi)
     if((INT32)mini<ImmediateMin) ImmediateMin=(INT32)mini;
     if((INT32)maxi>ImmediateMax) ImmediateMax=(INT32)maxi;
 }
-VOID InstructionMemAnalysis(UINT64 i, ADDRINT mini, ADDRINT maxi)
+VOID InstructionMemAnalysis(UINT64 i, ADDRINT mini, ADDRINT maxi, UINT32 memROp, UINT32 memWOp)
 {
     InsMemTouch+=i;
+    InsMemROpMap[memROp]++;
+    InsMemWOpMap[memWOp]++;
     if(i>MaxInsMemTouch) MaxInsMemTouch=i;
     if((ADDRDELTA)mini<MinDisplacement) MinDisplacement=(ADDRDELTA)mini;
     if((ADDRDELTA)maxi>MaxDisplacement) MaxDisplacement=(ADDRDELTA)maxi;
@@ -171,47 +186,43 @@ floating_point_instructions + others;
     OutFile <<"CPI: "<<(double)cycles/(double)total_instructions<<endl;
     OutFile << "===============================================\n";
     OutFile << "Instruction Length Distribution: \n";
-    for(auto i:InsLengthMap){
-        OutFile << "Instruction Length: " << i.first << " Count: " << i.second << endl;
+    for(UINT64 i=0; i<MAX_INS_LENGTH; i++){
+        OutFile << "Instruction Length: " << i << " Count: " << InsLengthMap[i] << endl;
     }
     OutFile << "===============================================\n";
     OutFile << "Instruction Operand Distribution: \n";
-    for(auto i:InsNumOpMap){
-        OutFile << "Instruction Num Operands: " << i.first << " Count: " << i.second
-<< endl;
+    for(UINT64 i=0; i<MAX_NUM_OPERANDS; i++){
+        OutFile << "Instruction Operands: " << i << " Count: " << InsNumOpMap[i] << endl;
     }
+    
     OutFile << "===============================================\n";
     OutFile << "Instruction Read Register Distribution: \n";
-    for(auto i:InsRRegMap){
-        OutFile << "Instruction Read Registers: " << i.first << " Count: " <<
-i.second << endl;
+    for(UINT64 i=0; i<MAX_NUM_REGISTERS; i++){
+        OutFile << "Instruction Read Registers: " << i << " Count: " << InsRRegMap[i] << endl;
     }
     OutFile << "===============================================\n";
     OutFile << "Instruction Write Register Distribution: \n";
-    for(auto i:InsWRegMap){
-        OutFile << "Instruction Write Registers: " << i.first << " Count: " <<
-i.second << endl;
+    for(UINT64 i=0; i<MAX_NUM_REGISTERS; i++){
+        OutFile << "Instruction Write Registers: " << i << " Count: " << InsWRegMap[i] << endl;
     }
     OutFile << "===============================================\n";
     OutFile << "Instruction Memory Distribution: \n";
     UINT64 memIns=0;
-    for(auto i:InsMemOpMap){
-        OutFile << "Instruction Memory Operands: " << i.first << " Count: " <<
-i.second << endl;
-        if(i.first>0) memIns+=i.second;
+    for(UINT64 i=0; i<MAX_MEM_OPERANDS; i++){
+        OutFile << "Instruction Memory Operands: " << i << " Count: " << InsMemOpMap[i] << endl;
+        if(i) memIns+=InsMemOpMap[i];
     }
     OutFile << "===============================================\n";
     OutFile << "Instruction Memory Read Distribution: \n";
-    for(auto i:InsMemROpMap){
-        OutFile << "Instruction Memory Read Operands: " << i.first << " Count: " <<
-i.second << endl;
+    for(UINT64 i=0; i<MAX_MEM_OPERANDS; i++){
+        OutFile << "Instruction Memory Read Operands: " << i << " Count: " << InsMemROpMap[i] << endl;
     }
     OutFile << "===============================================\n";
     OutFile << "Instruction Memory Write Distribution: \n";
-    for(auto i:InsMemWOpMap){
-        OutFile << "Instruction Memory Write Operands: " << i.first << " Count: " <<
-i.second << endl;
+    for(UINT64 i=0; i<MAX_MEM_OPERANDS; i++){
+        OutFile << "Instruction Memory Write Operands: " << i << " Count: " << InsMemWOpMap[i] << endl;
     }
+
     OutFile << "===============================================\n";
     OutFile << "Instruction Immediate Value Distribution: \n";
     OutFile << "Instruction Immediate Value Min: " << ImmediateMin << endl;
@@ -255,11 +266,12 @@ VOID Trace(TRACE trace, VOID *v)
 INT32_MAX, displacementValue;
             for (UINT32 memOp = 0; memOp < memOperands; memOp++){
                 UINT32 memopsize=INS_MemoryOperandSize(ins,memOp);
-                TotalMem+=memopsize;
+                // TotalMem+=memopsize;
                 UINT32 memopsize1;
                 memopsize1=memopsize+3;
                 memopsize1=memopsize1/4;
                 if(INS_MemoryOperandIsRead(ins, memOp)){
+                    TotalMem+=memopsize;
                     MemROperands++;
                     INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward,
 IARG_END);
@@ -267,6 +279,7 @@ IARG_END);
 (AFUNPTR)countloads,IARG_UINT32,memopsize1,IARG_END);
                 }
                 if(INS_MemoryOperandIsWritten(ins, memOp)){
+                    TotalMem+=memopsize;
                     MemWOperands++;
                     INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward,
 IARG_END);
@@ -279,12 +292,13 @@ displacementValue;
                 if (displacementValue < insDisplacementMin) insDisplacementMin =
 displacementValue;
                   
-
-                for (UINT64 addr = 0; addr < memopsize; addr += 32) {
+                
+                // for (UINT64 addr = 0; addr < memopsize; addr += 32) {
+                // INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                // INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)MemoryFootprint,IARG_MEMORYOP_EA, memOp, IARG_UINT64, addr, IARG_END);
+                // }
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)MemoryFootprint,IARG_MEMORYOP_EA,
-memOp, IARG_UINT64, addr, IARG_END);
-                }
+                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)MemoryFootprint,IARG_MEMORYOP_EA, memOp,IARG_UINT32, memopsize, IARG_END);
 
             }
             UINT32 numOperand = INS_OperandCount(ins);
@@ -307,7 +321,7 @@ immediateValue;
 
             UINT32 InsSize = INS_Size(ins);    
             UINT64 InsAddr = INS_Address(ins);
-            for (UINT64 addr = InsAddr; addr < (InsAddr + InsSize); addr += 32) {
+            for (UINT64 addr = InsAddr/32; addr <= (InsAddr + InsSize-1)/32; addr += 1) {
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
                 INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionFootprint,IARG_UINT64,addr/32,
 IARG_END);
@@ -320,21 +334,18 @@ IARG_END);
             //  
             if(flag==1){
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionImmDistribution,
-IARG_ADDRINT,(ADDRINT)insImmediateMin,IARG_ADDRINT,(ADDRINT)insImmediateMax,
-IARG_END);
+                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionImmDistribution, IARG_ADDRINT,(ADDRINT)insImmediateMin,IARG_ADDRINT,(ADDRINT)insImmediateMax, IARG_END);
+              
             }
            
             INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-            INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionMemDistribution,IARG_UINT32,MemROperands+MemWOperands,IARG_UINT32,MemROperands,IARG_UINT32,MemWOperands,
-IARG_END);
+            INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionMemDistribution,IARG_UINT32,MemROperands+MemWOperands, IARG_END);
             
             if(memOperands>=1)
             {
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionMemAnalysis,IARG_UINT64,TotalMem,
-IARG_ADDRINT,(ADDRINT)insDisplacementMin,
-IARG_ADDRINT,(ADDRINT)insDisplacementMax, IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionMemAnalysis,IARG_UINT64,TotalMem, IARG_ADDRINT,(ADDRINT)insDisplacementMin, IARG_ADDRINT,(ADDRINT)insDisplacementMax,IARG_UINT32,MemROperands,IARG_UINT32,MemWOperands, IARG_END);
+                
             }
 
             if (INS_Category(ins) == XED_CATEGORY_NOP) {
