@@ -285,7 +285,7 @@ VOID Trace(TRACE trace, VOID *v)
             UINT64 InsAddr = INS_Address(ins);
             for (UINT64 addr = InsAddr/32; addr <= (InsAddr + InsSize-1)/32; addr += 1) {
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionFootprint,IARG_UINT64,addr/32, IARG_END);
+                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionFootprint,IARG_UINT64,addr, IARG_END);
             }
             INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
             INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)InstructionDistribution,IARG_UINT32,InsSize, IARG_UINT32, INS_OperandCount(ins), IARG_UINT32,INS_MaxNumRRegs(ins),IARG_UINT32,INS_MaxNumWRegs(ins), IARG_END);
