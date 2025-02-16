@@ -237,16 +237,18 @@ VOID Trace(TRACE trace, VOID *v)
             ADDRDELTA insDisplacementMax = INT32_MIN, insDisplacementMin = INT32_MAX, displacementValue;
             for (UINT32 memOp = 0; memOp < memOperands; memOp++){
                 UINT32 memopsize=INS_MemoryOperandSize(ins,memOp);
-                TotalMem+=memopsize;
+                // TotalMem+=memopsize;
                 UINT32 memopsize1;
                 memopsize1=memopsize+3;
                 memopsize1=memopsize1/4;
                 if(INS_MemoryOperandIsRead(ins, memOp)){
+                    TotalMem+=memopsize;
                     MemROperands++;
                     INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
                     INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countloads,IARG_UINT32,memopsize1,IARG_END);
                 }
                 if(INS_MemoryOperandIsWritten(ins, memOp)){
+                    TotalMem+=memopsize;
                     MemWOperands++;
                     INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
                     INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE, (AFUNPTR)countstores,IARG_UINT32,memopsize1,IARG_END);
