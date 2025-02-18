@@ -263,7 +263,7 @@ VOID Trace(TRACE trace, VOID *v)
                 // INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)MemoryFootprint,IARG_MEMORYOP_EA, memOp, IARG_UINT64, addr, IARG_END);
                 // }
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)MemoryFootprint,IARG_MEMORYOP_EA, memOp,IARG_UINT32, memopsize, IARG_END);
+                INS_InsertThenPredicatedCall(ins,IPOINT_BEFORE,(AFUNPTR)MemoryFootprint,IARG_MEMORYOP_EA, memOp,IARG_UINT32, memopsize, IARG_END);
 
             }
             UINT32 numOperand = INS_OperandCount(ins);
