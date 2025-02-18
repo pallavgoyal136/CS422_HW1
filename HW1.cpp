@@ -6,8 +6,6 @@ using namespace std;
 #include<unordered_map>
 ofstream OutFile;
 
-// The running count of instructions is kept here
-// make it static to help the compiler optimize docount
 static UINT64 icount = 0;static bool analyze=false;
 static UINT64 fast_forward_count=0;
 static UINT64 loads=0;
@@ -36,19 +34,10 @@ static ADDRDELTA MaxDisplacement = INT32_MIN;
 static ADDRDELTA MinDisplacement = INT32_MAX;
 static unordered_set<UINT64> InsMemFootPrint;
 static unordered_set<UINT64> DataMemFootPrint;
-// static unordered_map<UINT64,UINT64> InsLengthMap;
-// static unordered_map<UINT64,UINT64> InsNumOpMap;
-// static unordered_map<UINT64,UINT64> InsRRegMap;
-// static unordered_map<UINT64,UINT64> InsWRegMap;
-// static unordered_map<UINT64,UINT64> InsMemOpMap;
-// static unordered_map<UINT64,UINT64> InsMemROpMap;
-// static unordered_map<UINT64,UINT64> InsMemWOpMap;
 const UINT64 MAX_INS_LENGTH = 16;       // Maximum instruction length
 const UINT64 MAX_NUM_OPERANDS = 16;     // Maximum number of operands
 const UINT64 MAX_NUM_REGISTERS = 16;    // Maximum number of registers
 const UINT64 MAX_MEM_OPERANDS = 10;     // Maximum memory operands
-
-// Global arrays to replace unordered_map
 static UINT64 InsLengthMap[MAX_INS_LENGTH] = {0};
 static UINT64 InsNumOpMap[MAX_NUM_OPERANDS] = {0};
 static UINT64 InsRRegMap[MAX_NUM_REGISTERS] = {0};
@@ -59,7 +48,6 @@ static UINT64 InsMemWOpMap[MAX_MEM_OPERANDS] = {0};
 std::chrono::time_point<std::chrono::system_clock> startTime;
 std::chrono::time_point<std::chrono::system_clock> endTime;
 
-// This function is called before every instruction is executed
 ADDRINT Terminate(void)
 {
     return (icount >= fast_forward_count + 1000000000);
@@ -70,8 +58,6 @@ ADDRINT CheckFastForward (void) {
 ADDRINT FastForward (void) {
     return analyze;
 }
-
-// This function is called before every block
 VOID inccount() { icount ++;}
 VOID docount(UINT32 c) { icount += c;}
 VOID countloads(UINT32 c) { loads +=c;}
@@ -106,17 +92,10 @@ VOID InstructionDistribution(UINT32 i, UINT32 j, UINT32 k, UINT32 l)
     InsNumOpMap[j]++;
     InsRRegMap[k]++;
     InsWRegMap[l]++;
-    // if(mini<ImmediateMin) ImmediateMin=mini;
-    // if(maxi>ImmediateMax) ImmediateMax=maxi;
 }
 VOID InstructionMemDistribution(UINT32 i)
 {
     InsMemOpMap[i]++;
-    
-    // InsMemTouch+=l;
-    // if(l>MaxInsMemTouch) MaxInsMemTouch=l;
-    // if(mini<MinDisplacement) MinDisplacement=mini;
-    // if(maxi>MaxDisplacement) MaxDisplacement=maxi;
 }
 VOID InstructionImmDistribution(ADDRINT mini, ADDRINT maxi)
 {
@@ -220,16 +199,14 @@ void MyExitRoutine() {
     OutFile.close();
     exit(0);
 }    
-// Pin calls this function every time a new instruction is encountered
+
 VOID Trace(TRACE trace, VOID *v)
 {
-    // Insert a call to docount before every instruction, no arguments are passed
     for( BBL bbl = TRACE_BblHead(trace); BBL_Valid(bbl); bbl = BBL_Next(bbl) ){
         BBL_InsertIfCall(bbl, IPOINT_BEFORE, (AFUNPTR)Terminate, IARG_END);
         BBL_InsertThenCall(bbl, IPOINT_BEFORE, (AFUNPTR)MyExitRoutine, IARG_END);
         BBL_InsertCall(bbl, IPOINT_BEFORE, (AFUNPTR)CheckFastForward, IARG_END);
         for( INS ins= BBL_InsHead(bbl); INS_Valid(ins); ins = INS_Next(ins) ){
-            // INS_InsertCall(ins,IPOINT_BEFORE, (AFUNPTR)inccount,IARG_END);
             UINT32 memOperands = INS_MemoryOperandCount(ins);
             UINT32 MemROperands = 0;
             UINT32 MemWOperands = 0;
@@ -237,7 +214,6 @@ VOID Trace(TRACE trace, VOID *v)
             ADDRDELTA insDisplacementMax = INT32_MIN, insDisplacementMin = INT32_MAX, displacementValue;
             for (UINT32 memOp = 0; memOp < memOperands; memOp++){
                 UINT32 memopsize=INS_MemoryOperandSize(ins,memOp);
-                // TotalMem+=memopsize;
                 UINT32 memopsize1;
                 memopsize1=memopsize+3;
                 memopsize1=memopsize1/4;
