@@ -117,6 +117,7 @@ void MyExitRoutine() {
     total_instructions = loads + stores + nops + direct_calls + indirect_calls + returns + unconditional_branches + conditional_branches + logical_operations + rotate_and_shift_operations + flag_operations + vector_instructions + conditional_moves + mmx_and_sse_instructions + system_calls + floating_point_instructions + others;
     OutFile << "===============================================\n";
     OutFile << "Instruction Type Results: \n";
+    OutFile << "To be ignored: "<< (double)loads/(double)total_instructions <<endl;
     OutFile << "Loads: " << loads <<" (" <<(double)loads/(double)total_instructions<<")"<< endl;
     OutFile << "Stores: " << stores <<" (" <<(double)stores/(double)total_instructions<<")"<< endl;
     OutFile << "Nops: " << nops <<" (" <<(double)nops/(double)total_instructions<<")"<< endl;
