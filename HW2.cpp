@@ -211,7 +211,7 @@ VOID Trace(TRACE trace, VOID *v){
         for( INS ins= BBL_InsHead(bbl); INS_Valid(ins); ins = INS_Next(ins) ){
             if(INS_Category(ins) == XED_CATEGORY_COND_BR){
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertTnenCall(ins,IPOINT_BEFORE,(AFUNPTR)predict_unconditional_branch,IARG_ADDRINT,(ADDRINT)INS_Address(ins),IARG_ADDRINT,IARG_BRANCH_TARGET_ADDR,IARG_END);
+                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)predict_unconditional_branch,IARG_ADDRINT,(ADDRINT)INS_Address(ins),IARG_ADDRINT,IARG_BRANCH_TARGET_ADDR,IARG_END);
                 Ins_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
                 Ins_InsertThenCall(ins,IPOINT_AFTER,(AFUNPTR)update_fall_through,IARG_ADDRINT,(ADDRINT)INS_Address(ins),IARG_END);
                 Ins_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
