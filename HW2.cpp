@@ -111,12 +111,12 @@ VOID update_fall_through(ADDRINT pc){
     sag_pht[sag_bht[pc&mask1024]]--;
     gag_pht[ghr]--;
     gshare_pht[(pc&mask512)^ghr]--;
-    if(sag&&(!gag)) sag_gag_hybrid_pht[ghr]++;
-    else if((!sag)&&gag) sag_gag_hybrid_pht[ghr]--;
-    if(sag&&(!gshare)) gshare_sag_hybrid_pht[ghr]--;
-    else if((!sag)&&gshare) gshare_sag_hybrid_pht[ghr]++;
-    if(gag&&(!gshare)) gshare_gag_hybrid_pht[ghr]--;
-    else if((!gag)&&gshare) gshare_gag_hybrid_pht[ghr]++;
+    if(sag&&(!gag)) sag_gag_hybrid_pht[ghr]--;
+    else if((!sag)&&gag) sag_gag_hybrid_pht[ghr]++;
+    if(sag&&(!gshare)) gshare_sag_hybrid_pht[ghr]++;
+    else if((!sag)&&gshare) gshare_sag_hybrid_pht[ghr]--;
+    if(gag&&(!gshare)) gshare_gag_hybrid_pht[ghr]++;
+    else if((!gag)&&gshare) gshare_gag_hybrid_pht[ghr]--;
     bimodal_pht[pc&mask512]=(bimodal_pht[pc&mask512]<(-2))?(-2):bimodal_pht[pc&mask512];
     sag_pht[sag_bht[pc&mask1024]]=(sag_pht[sag_bht[pc&mask1024]]<(-2))?(-2):sag_pht[sag_bht[pc&mask1024]];
     gag_pht[ghr]=(gag_pht[ghr]<(-4))?(-4):gag_pht[ghr];
