@@ -68,7 +68,7 @@ VOID predict_unconditional_branch(ADDRINT pc,ADDRINT target){
     bimodal=(bimodal_pht[pc&mask512]>=0);
     sag=(sag_pht[sag_bht[pc&mask1024]]>=0);
     gag=(gag_pht[ghr]>=0);
-    gshare=(gshare_pht[(pc&mask512)^ghr]);
+    gshare=(gshare_pht[(pc&mask512)^ghr]>=0);
     sag_gag_hybrid=((sag_gag_hybrid_pht[ghr]>=0) ? sag: gag);
     INT8 majority=0;
     majority+=(sag?1:0);majority+=(gag?1:0);majority+=(gshare?1:0);
@@ -211,7 +211,7 @@ VOID Trace(TRACE trace, VOID *v){
         for( INS ins= BBL_InsHead(bbl); INS_Valid(ins); ins = INS_Next(ins) ){
             if(INS_Category(ins) == XED_CATEGORY_COND_BR){
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)predict_unconditional_branch,IARG_ADDRINT,(ADDRINT)INS_Address(ins),IARG_ADDRINT,IARG_BRANCH_TARGET_ADDR,IARG_END);
+                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)predict_unconditional_branch,IARG_ADDRINT,(ADDRINT)INS_Address(ins),IARG_ADDRINT,(ADDRINT)IARG_BRANCH_TARGET_ADDR,IARG_END);
                 INS_InsertIfCall(ins,IPOINT_AFTER, (AFUNPTR)FastForward, IARG_END);
                 INS_InsertThenCall(ins,IPOINT_AFTER,(AFUNPTR)update_fall_through,IARG_ADDRINT,(ADDRINT)INS_Address(ins),IARG_END);
                 INS_InsertIfCall(ins,IPOINT_TAKEN_BRANCH, (AFUNPTR)FastForward, IARG_END);
