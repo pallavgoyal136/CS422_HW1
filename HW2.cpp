@@ -128,7 +128,7 @@ VOID update_fall_through(ADDRINT pc){
     gshare_sag_hybrid_pht[ghr]=(gshare_sag_hybrid_pht[ghr]>1)?1:gshare_sag_hybrid_pht[ghr];
     gshare_gag_hybrid_pht[ghr]=(gshare_gag_hybrid_pht[ghr]>1)?1:gshare_gag_hybrid_pht[ghr];
     sag_bht[pc&mask1024]=(sag_bht[pc&mask1024]<<1);
-    sag_bht&=mask512;
+    sag_bht[pc&mask1024]&=mask512;
     ghr=(ghr<<1);
     ghr&=mask512;
     return;
@@ -175,7 +175,7 @@ VOID update_taken_branch(ADDRINT pc){
     gshare_gag_hybrid_pht[ghr]=(gshare_gag_hybrid_pht[ghr]>1)?1:gshare_gag_hybrid_pht[ghr];
     sag_bht[pc&mask1024]=(sag_bht[pc&mask1024]<<1);
     sag_bht[pc&mask1024]|=1;
-    sag_bht&=mask512;
+    sag_bht[pc&mask1024]&=mask512;
     ghr=(ghr<<1);
     ghr|=1;
     ghr&=mask512;
