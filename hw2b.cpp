@@ -41,9 +41,9 @@ INT8 gshare_pht[gshare_pht_height];
 INT8 sag_gag_hybrid_pht[sag_gag_hybrid_height];
 INT8 gshare_sag_hybrid_pht[gshare_sag_hybrid_height];
 INT8 gshare_gag_hybrid_pht[gshare_gag_hybrid_height];
-INT64 BTB_PC[numsets][numways];
-INT64 BTB_H1[numsets][numways];
-INT64 BTB_H2[numsets][numways];
+UINT64 BTB_PC[numsets][numways];
+UINT64 BTB_H1[numsets][numways];
+UINT64 BTB_H2[numsets][numways];
 UINT64 icount=0;
 UINT64 fast_forward_count;
 UINT64 forward_branches=0;
@@ -81,14 +81,14 @@ ADDRINT CheckFastForward (void) {
 ADDRINT FastForward (void) {
     return analyze;
 }
-VOID predict_control_flow_ins(ADDRINT pc, ADDRINT target)
+VOID predict_control_flow_ins(ADDRINT pc, ADDRINT nextpc, ADDRINT target)
 {
-    UINT32 index =  pc&mask128;
-    UINT32 tag = pc>>7;
-    UINT32 pred;
+    UINT64 index =  pc&mask128;
+    UINT64 tag = pc>>7;
+    UINT64 pred;
     int hit=0, way=0;
     UINT64 curr;
-    for(UINT i=0;i<4;i++)
+    for(UINT64 i=0;i<4;i++)
     {
         if((BTB_PC[index][i]>>shifttag)&masktag == tag && BTB_PC[index][i]>>shiftvalid==1)
         {
@@ -98,7 +98,7 @@ VOID predict_control_flow_ins(ADDRINT pc, ADDRINT target)
         }
     }
     if(hit==0){
-        pred=pc+4;
+        pred=nextpc;
         miss_BTB_PC++;
     }
     else
@@ -107,49 +107,52 @@ VOID predict_control_flow_ins(ADDRINT pc, ADDRINT target)
         mispred_BTB_PC++;
     if(hit==0)
     {
-        for(UIN32 i=0;i<4;i++)
+        for(UINT64 i=0;i<4;i++)
         {
             if(BTB_PC[index][i]>>shiftvalid==0 || (BTB_PC[index][i]>>shiftlru)&masklru==3)
             {
                 BTB_PC[index][i]=tag<<shifttag;
-                BTB_PC[index][i]=BTB_PC[index][i]|(1<<shiftvalid);
+                BTB_PC[index][i]=BTB_PC[index][i]|(1ULL<<shiftvalid);
                 BTB_PC[index][i]=BTB_PC[index][i]|(target<<shifttarget);
                 way=i;
                 break;
             }
         }
-        for(UINT32 i=0;i<4;i++)
+        for(UINT64 i=0;i<4;i++)
         {
-            if(i!=way)
+            if(i!=way && BTB_PC[index][i]>>shiftvalid==1)
             {
-                BTB_PC[index][i]=(((BTB_PC[index][i]>>shiftlru)+1)<<shiftlru)|(BTB_PC[index][i]&masklru);
+                UINT64 newlru=((BTB_PC[index][i]>>shiftlru)+1);
+                BTB_PC[index][i]|=(masklru<<shiftlru);
+                BTB_PC[index][i]=BTB_PC[index][i]&(newlru<<shiftlru);
             }
 
         }
     }
     else
     {
-        for(UINT32 i=0;i<4;i++)
+        for(UINT64 i=0;i<4;i++)
         {
-            if(i!=way && (BTB_PC[index][i]>>shiftlru)&masklru<curr)
+            if(i!=way && (BTB_PC[index][i]>>shiftlru)&masklru<curr && BTB_PC[index][i]>>shiftvalid==1)
             {
-                BTB_PC[index][i]=(((BTB_PC[index][i]>>shiftlru)+1)<<shiftlru)|(BTB_PC[index][i]&masklru);
-            }
+                UINT64 newlru=((BTB_PC[index][i]>>shiftlru)+1);
+                BTB_PC[index][i]|=(masklru<<shiftlru);
+                BTB_PC[index][i]=BTB_PC[index][i]&(newlru<<shiftlru);            }
             else if(i==way)
             {
-                BTB_PC[index][i]=(1<<shiftvalid)|(tag<<shifttag)|(target);
+                BTB_PC[index][i]=(1ULL<<shiftvalid)|(tag<<shifttag)|(target);
             }
         }
     }
     control_flow++;
-}VOID predict_control_flow_ins2(ADDRINT pc, ADDRINT target)
+}VOID predict_control_flow_ins2(ADDRINT pc, ADDRINT nextpc, ADDRINT target)
 {
-    UINT32 index =  (pc&mask128)^(ghr&mask128);
-    UINT32 tag = pc;
-    UINT32 pred;
+    UINT64 index =  (pc&mask128)^(ghr&mask128);
+    UINT64 tag = pc;
+    UINT64 pred;
     int hit=0, way=0;
     UINT64 curr;
-    for(UINT32 i=0;i<4;i++)
+    for(UINT64 i=0;i<4;i++)
     {
         if((BTB_H2[index][i])&masktarget == tag && BTB_H2[index][i]>>34==1)
         {
@@ -159,29 +162,29 @@ VOID predict_control_flow_ins(ADDRINT pc, ADDRINT target)
         }
     }
     if(hit==0){
-        pred=pc+4;
+        pred=nextpc;
         miss_BTB_H++;
     }
     else
         pred=BTB_H1[index][way]&masktarget;
     if(pred!=target)
-        mispred_BTB_PC++;
+        mispred_BTB_H++;
     if(hit==0)
     {
-        for(UINT32 i=0;i<4;i++)
+        for(UINT64 i=0;i<4;i++)
         {
             if(BTB_H2[index][i]>>34==0 || (BTB_H2[index][i]>>32)&masklru==3)
             {
                 BTB_H2[index][i]=tag;
-                BTB_H2[index][i]=BTB_H2[index][i]|(1<<34);
+                BTB_H2[index][i]=BTB_H2[index][i]|(1ULL<<34);
                 BTB_H1[index][i]=target;
                 way=i;
                 break;
             }
         }
-        for(UINT32 i=0;i<4;i++)
+        for(UINT64 i=0;i<4;i++)
         {
-            if(i!=way)
+            if(i!=way && BTB_H2[index][i]>>34==1)
             {
                 BTB_H2[index][i]=(((BTB_H2[index][i]>>32)+1)<<32)|(BTB_H2[index][i]&masktarget);
             }
@@ -191,21 +194,21 @@ VOID predict_control_flow_ins(ADDRINT pc, ADDRINT target)
     {
         for(UINT32 i=0;i<4;i++)
         {
-            if(i!=way && (BTB_PC[index][i]>>shiftlru)&masklru<curr)
+            if(i!=way && (BTB_H2[index][i]>>32)&masklru<curr && BTB_H2[index][i]>>34==1)
             {
                 BTB_H2[index][i]=(((BTB_H2[index][i]>>32)+1)<<32)|(BTB_H2[index][i]&masktarget);
             }
             else if(i==way)
             {
                 BTB_H2[index][i]=tag;
-                BTB_H2[index][i]=BTB_H2[index][i]|(1<<34);
+                BTB_H2[index][i]=BTB_H2[index][i]|(1ULL<<34);
                 BTB_H1[index][i]=target;   
             }
         }
     }
-    control_flow++;
+ //   control_flow++;
 }
-VOID predict_unconditional_branch(ADDRINT pc,ADDRINT target){
+VOID predict_unconditional_branch(ADDRINT pc, ADDRINT target){
     FNBT=(pc>target);
     bimodal=(bimodal_pht[pc&mask512]>=0);
     sag=(sag_pht[sag_bht[pc&mask1024]]>=0);
@@ -364,10 +367,10 @@ VOID Trace(TRACE trace, VOID *v){
             }
             if(INS_IsIndirectControlFlow(ins))
             {
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward,IARG_END);
+                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)predict_control_flow_ins, IARG_ADDRINT,(ADDRINT)INS_Address(ins),IARG_ADDRINT, (ADDRINT)INS_NextAddress(ins),IARG_BRANCH_TARGET_ADDR,IARG_END);
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)predict_control_flow_ins, IARG_ADDRINT,(ADDRINT)INS_Address(ins),IARG_BRANCH_TARGET_ADDR,IARG_END);
-                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)predict_control_flow_ins2, IARG_ADDRINT,(ADDRINT)INS_Address(ins),IARG_BRANCH_TARGET_ADDR,IARG_END);
+                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)predict_control_flow_ins2, IARG_ADDRINT,(ADDRINT)INS_Address(ins),IARG_ADDRINT, (ADDRINT)INS_NextAddress(ins),IARG_BRANCH_TARGET_ADDR,IARG_END);
             }
         }
         BBL_InsertCall(bbl, IPOINT_BEFORE, (AFUNPTR)docount, IARG_UINT32, BBL_NumIns(bbl), IARG_END);
@@ -403,6 +406,8 @@ int main(int argc, char * argv[])
     for(int i=0;i<numsets;i++){
         for(int j=0;j<numways;j++){
             BTB_PC[i][j]=0;
+            BTB_H1[i][j]=0;
+            BTB_H2[i][j]=0;
         }
     }
     ghr=0;
