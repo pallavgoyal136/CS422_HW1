@@ -20,6 +20,7 @@ ofstream OutFile;
 #define shiftvalid 59
 #define shiftlru 57
 #define masklru (UINT64)0x3
+#define hmask (UINT64)0x1FFFFFFFFFFFFFF
 #define masktarget (UINT64)0xFFFFFFFF
 #define numways 4
 #define numsets 128 
@@ -122,9 +123,8 @@ VOID predict_control_flow_ins(ADDRINT pc, ADDRINT nextpc, ADDRINT target)
         {
             if(i!=way && BTB_PC[index][i]>>shiftvalid==1)
             {
-                UINT64 newlru=((BTB_PC[index][i]>>shiftlru)+1);
-                BTB_PC[index][i]|=(masklru << shiftlru);
-                BTB_PC[index][i]=BTB_PC[index][i]&(newlru<<shiftlru);
+                UINT64 temp=BTB_PC[index][i];
+                BTB_PC[index][i]|=(temp&hmask)|(((temp>>shiftlru)+1)<<shiftlru);
             }
 
         }
@@ -135,9 +135,9 @@ VOID predict_control_flow_ins(ADDRINT pc, ADDRINT nextpc, ADDRINT target)
         {
             if(i!=way && ((BTB_PC[index][i]>>shiftlru)&masklru)<curr && BTB_PC[index][i]>>shiftvalid==1)
             {
-                UINT64 newlru=((BTB_PC[index][i]>>shiftlru)+1);
-                BTB_PC[index][i]|=(masklru<<shiftlru);
-                BTB_PC[index][i]=BTB_PC[index][i]&(newlru<<shiftlru);            }
+                UINT64 temp=BTB_PC[index][i];
+                BTB_PC[index][i]|=(temp&hmask)|(((temp>>shiftlru)+1)<<shiftlru);  
+            }
             else if(i==way)
             {
                 BTB_PC[index][i]=(1ULL<<shiftvalid)|(tag<<shifttag)|(target);
