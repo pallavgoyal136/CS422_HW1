@@ -12,15 +12,15 @@ ofstream OutFile;
 #define sag_gag_hybrid_height 512
 #define gshare_sag_hybrid_height 512
 #define gshare_gag_hybrid_height 512
-#define mask512 0x1FF
-#define mask1024 0x3FF
-#define mask128 0x7F
-#define masktag 0x1FFFFFF
+#define mask512 (UINT64)0x1FF
+#define mask1024 (UINT64)0x3FF
+#define mask128 (UINT64)0x7F
+#define masktag (UINT64)0x1FFFFFF
 #define shifttag 32
 #define shiftvalid 59
 #define shiftlru 57
-#define masklru 0x3
-#define masktarget 0xFFFFFFFF
+#define masklru (UINT64)0x3
+#define masktarget (UINT64)0xFFFFFFFF
 #define numways 4
 #define numsets 128 
 bool FNBT;
@@ -86,11 +86,11 @@ VOID predict_control_flow_ins(ADDRINT pc, ADDRINT nextpc, ADDRINT target)
     UINT64 index =  pc&mask128;
     UINT64 tag = pc>>7;
     UINT64 pred;
-    int hit=0, way=0;
+    UINT64 hit=0, way=0;
     UINT64 curr;
     for(UINT64 i=0;i<4;i++)
     {
-        if((BTB_PC[index][i]>>shifttag)&masktag == tag && BTB_PC[index][i]>>shiftvalid==1)
+        if(((BTB_PC[index][i]>>shifttag)&masktag) == tag && (BTB_PC[index][i]>>shiftvalid==1))
         {
             hit=1;
             way=i;
@@ -109,11 +109,11 @@ VOID predict_control_flow_ins(ADDRINT pc, ADDRINT nextpc, ADDRINT target)
     {
         for(UINT64 i=0;i<4;i++)
         {
-            if(BTB_PC[index][i]>>shiftvalid==0 || (BTB_PC[index][i]>>shiftlru)&masklru==3)
+            if(BTB_PC[index][i]>>shiftvalid==0 || ((BTB_PC[index][i]>>shiftlru)&masklru)==3)
             {
                 BTB_PC[index][i]=tag<<shifttag;
                 BTB_PC[index][i]=BTB_PC[index][i]|(1ULL<<shiftvalid);
-                BTB_PC[index][i]=BTB_PC[index][i]|(target<<shifttarget);
+                BTB_PC[index][i]=BTB_PC[index][i]|(target);
                 way=i;
                 break;
             }
@@ -123,7 +123,7 @@ VOID predict_control_flow_ins(ADDRINT pc, ADDRINT nextpc, ADDRINT target)
             if(i!=way && BTB_PC[index][i]>>shiftvalid==1)
             {
                 UINT64 newlru=((BTB_PC[index][i]>>shiftlru)+1);
-                BTB_PC[index][i]|=(masklru<<shiftlru);
+                BTB_PC[index][i]|=(masklru << shiftlru);
                 BTB_PC[index][i]=BTB_PC[index][i]&(newlru<<shiftlru);
             }
 
@@ -133,7 +133,7 @@ VOID predict_control_flow_ins(ADDRINT pc, ADDRINT nextpc, ADDRINT target)
     {
         for(UINT64 i=0;i<4;i++)
         {
-            if(i!=way && (BTB_PC[index][i]>>shiftlru)&masklru<curr && BTB_PC[index][i]>>shiftvalid==1)
+            if(i!=way && ((BTB_PC[index][i]>>shiftlru)&masklru)<curr && BTB_PC[index][i]>>shiftvalid==1)
             {
                 UINT64 newlru=((BTB_PC[index][i]>>shiftlru)+1);
                 BTB_PC[index][i]|=(masklru<<shiftlru);
@@ -150,11 +150,11 @@ VOID predict_control_flow_ins(ADDRINT pc, ADDRINT nextpc, ADDRINT target)
     UINT64 index =  (pc&mask128)^(ghr&mask128);
     UINT64 tag = pc;
     UINT64 pred;
-    int hit=0, way=0;
+    UINT64 hit=0, way=0;
     UINT64 curr;
     for(UINT64 i=0;i<4;i++)
     {
-        if((BTB_H2[index][i])&masktarget == tag && BTB_H2[index][i]>>34==1)
+        if(((BTB_H2[index][i])&masktarget) == tag && BTB_H2[index][i]>>34==1)
         {
             hit=1;
             way=i;
@@ -173,7 +173,7 @@ VOID predict_control_flow_ins(ADDRINT pc, ADDRINT nextpc, ADDRINT target)
     {
         for(UINT64 i=0;i<4;i++)
         {
-            if(BTB_H2[index][i]>>34==0 || (BTB_H2[index][i]>>32)&masklru==3)
+            if(BTB_H2[index][i]>>34==0 || (((BTB_H2[index][i]>>32)&masklru)==3))
             {
                 BTB_H2[index][i]=tag;
                 BTB_H2[index][i]=BTB_H2[index][i]|(1ULL<<34);
@@ -194,7 +194,7 @@ VOID predict_control_flow_ins(ADDRINT pc, ADDRINT nextpc, ADDRINT target)
     {
         for(UINT32 i=0;i<4;i++)
         {
-            if(i!=way && (BTB_H2[index][i]>>32)&masklru<curr && BTB_H2[index][i]>>34==1)
+            if(i!=way && ((BTB_H2[index][i]>>32)&masklru)<curr && BTB_H2[index][i]>>34==1)
             {
                 BTB_H2[index][i]=(((BTB_H2[index][i]>>32)+1)<<32)|(BTB_H2[index][i]&masktarget);
             }
