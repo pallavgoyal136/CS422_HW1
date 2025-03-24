@@ -316,19 +316,19 @@ VOID predict_control_flow_ins2(ADDRINT pc, ADDRINT nextpc, ADDRINT target)
 }
 VOID predict_unconditional_branch(ADDRINT pc, ADDRINT target){
     FNBT=(pc>target);
-    bimodal=(bimodal_pht[pc&mask512]>=0);
-    sag=(sag_pht[sag_bht[pc&mask1024]]>=0);
-    gag=(gag_pht[ghr]>=0);
-    gshare=(gshare_pht[(pc&mask512)^ghr]>=0);
-    sag_gag_hybrid=((sag_gag_hybrid_pht[ghr]>=0) ? sag: gag);
+    bimodal=(bimodal_pht[pc&mask512]>=1);
+    sag=(sag_pht[sag_bht[pc&mask1024]]>=1);
+    gag=(gag_pht[ghr]>=4);
+    gshare=(gshare_pht[(pc&mask512)^ghr]>=4);
+    sag_gag_hybrid=((sag_gag_hybrid_pht[ghr]>=1) ? sag: gag);
     INT8 majority=0;
     majority+=(sag?1:0);majority+=(gag?1:0);majority+=(gshare?1:0);
     sag_gag_gshare_hybrid_majority=(majority>=2);
-    if(sag_gag_hybrid_pht[ghr]>=0){
-        sag_gag_gshare_hybrid_tournament=((gshare_sag_hybrid_pht[ghr]>=0)?gshare:sag);
+    if(sag_gag_hybrid_pht[ghr]>=1){
+        sag_gag_gshare_hybrid_tournament=((gshare_sag_hybrid_pht[ghr]>=1)?gshare:sag);
     }
     else{
-        sag_gag_gshare_hybrid_tournament=((gshare_gag_hybrid_pht[ghr]>=0)?gshare:gag);
+        sag_gag_gshare_hybrid_tournament=((gshare_gag_hybrid_pht[ghr]>=1)?gshare:gag);
     }
     if(FNBT){
         backward_branches++;
@@ -368,16 +368,16 @@ VOID update_fall_through(ADDRINT pc){
     else if((!sag)&&gshare) gshare_sag_hybrid_pht[ghr]--;
     if(gag&&(!gshare)) gshare_gag_hybrid_pht[ghr]++;
     else if((!gag)&&gshare) gshare_gag_hybrid_pht[ghr]--;
-    bimodal_pht[pc&mask512]=(bimodal_pht[pc&mask512]<(-2))?(-2):bimodal_pht[pc&mask512];
-    sag_pht[sag_bht[pc&mask1024]]=(sag_pht[sag_bht[pc&mask1024]]<(-2))?(-2):sag_pht[sag_bht[pc&mask1024]];
-    gag_pht[ghr]=(gag_pht[ghr]<(-4))?(-4):gag_pht[ghr];
-    gshare_pht[(pc&mask512)^ghr]=(gshare_pht[(pc&mask512)^ghr]<(-4))?(-4):gshare_pht[(pc&mask512)^ghr];
-    sag_gag_hybrid_pht[ghr]=(sag_gag_hybrid_pht[ghr]<(-2))?(-2):sag_gag_hybrid_pht[ghr];
-    gshare_sag_hybrid_pht[ghr]=(gshare_sag_hybrid_pht[ghr]<(-2))?(-2):gshare_sag_hybrid_pht[ghr];
-    gshare_gag_hybrid_pht[ghr]=(gshare_gag_hybrid_pht[ghr]<(-2))?(-2):gshare_gag_hybrid_pht[ghr];
-    sag_gag_hybrid_pht[ghr]=(sag_gag_hybrid_pht[ghr]>1)?1:sag_gag_hybrid_pht[ghr];
-    gshare_sag_hybrid_pht[ghr]=(gshare_sag_hybrid_pht[ghr]>1)?1:gshare_sag_hybrid_pht[ghr];
-    gshare_gag_hybrid_pht[ghr]=(gshare_gag_hybrid_pht[ghr]>1)?1:gshare_gag_hybrid_pht[ghr];
+    bimodal_pht[pc&mask512]=(bimodal_pht[pc&mask512]<(0))?(0):bimodal_pht[pc&mask512];
+    sag_pht[sag_bht[pc&mask1024]]=(sag_pht[sag_bht[pc&mask1024]]<(0))?(0):sag_pht[sag_bht[pc&mask1024]];
+    gag_pht[ghr]=(gag_pht[ghr]<(0))?(0):gag_pht[ghr];
+    gshare_pht[(pc&mask512)^ghr]=(gshare_pht[(pc&mask512)^ghr]<(0))?(0):gshare_pht[(pc&mask512)^ghr];
+    sag_gag_hybrid_pht[ghr]=(sag_gag_hybrid_pht[ghr]<(0))?(0):sag_gag_hybrid_pht[ghr];
+    gshare_sag_hybrid_pht[ghr]=(gshare_sag_hybrid_pht[ghr]<(0))?(0):gshare_sag_hybrid_pht[ghr];
+    gshare_gag_hybrid_pht[ghr]=(gshare_gag_hybrid_pht[ghr]<(0))?(0):gshare_gag_hybrid_pht[ghr];
+    sag_gag_hybrid_pht[ghr]=(sag_gag_hybrid_pht[ghr]>3)?3:sag_gag_hybrid_pht[ghr];
+    gshare_sag_hybrid_pht[ghr]=(gshare_sag_hybrid_pht[ghr]>3)?3:gshare_sag_hybrid_pht[ghr];
+    gshare_gag_hybrid_pht[ghr]=(gshare_gag_hybrid_pht[ghr]>3)?3:gshare_gag_hybrid_pht[ghr];
     sag_bht[pc&mask1024]=(sag_bht[pc&mask1024]<<1);
     sag_bht[pc&mask1024]&=mask512;
     ghr=(ghr<<1);
@@ -414,16 +414,16 @@ VOID update_taken_branch(ADDRINT pc){
     else if((!sag)&&gshare) gshare_sag_hybrid_pht[ghr]++;
     if(gag&&(!gshare)) gshare_gag_hybrid_pht[ghr]--;
     else if((!gag)&&gshare) gshare_gag_hybrid_pht[ghr]++;
-    bimodal_pht[pc&mask512]=(bimodal_pht[pc&mask512]>1)?1:bimodal_pht[pc&mask512];
-    sag_pht[sag_bht[pc&mask1024]]=(sag_pht[sag_bht[pc&mask1024]]>1)?1:sag_pht[sag_bht[pc&mask1024]];
-    gag_pht[ghr]=(gag_pht[ghr]>3)?3:gag_pht[ghr];
-    gshare_pht[(pc&mask512)^ghr]=(gshare_pht[(pc&mask512)^ghr]>3)?3:gshare_pht[(pc&mask512)^ghr];
-    sag_gag_hybrid_pht[ghr]=(sag_gag_hybrid_pht[ghr]<(-2))?(-2):sag_gag_hybrid_pht[ghr];
-    gshare_sag_hybrid_pht[ghr]=(gshare_sag_hybrid_pht[ghr]<(-2))?(-2):gshare_sag_hybrid_pht[ghr];
-    gshare_gag_hybrid_pht[ghr]=(gshare_gag_hybrid_pht[ghr]<(-2))?(-2):gshare_gag_hybrid_pht[ghr];
-    sag_gag_hybrid_pht[ghr]=(sag_gag_hybrid_pht[ghr]>1)?1:sag_gag_hybrid_pht[ghr];
-    gshare_sag_hybrid_pht[ghr]=(gshare_sag_hybrid_pht[ghr]>1)?1:gshare_sag_hybrid_pht[ghr];
-    gshare_gag_hybrid_pht[ghr]=(gshare_gag_hybrid_pht[ghr]>1)?1:gshare_gag_hybrid_pht[ghr];
+    bimodal_pht[pc&mask512]=(bimodal_pht[pc&mask512]>3)?3:bimodal_pht[pc&mask512];
+    sag_pht[sag_bht[pc&mask1024]]=(sag_pht[sag_bht[pc&mask1024]]>3)?3:sag_pht[sag_bht[pc&mask1024]];
+    gag_pht[ghr]=(gag_pht[ghr]>7)?7:gag_pht[ghr];
+    gshare_pht[(pc&mask512)^ghr]=(gshare_pht[(pc&mask512)^ghr]>7)?7:gshare_pht[(pc&mask512)^ghr];
+    sag_gag_hybrid_pht[ghr]=(sag_gag_hybrid_pht[ghr]<(0))?(0):sag_gag_hybrid_pht[ghr];
+    gshare_sag_hybrid_pht[ghr]=(gshare_sag_hybrid_pht[ghr]<(0))?(0):gshare_sag_hybrid_pht[ghr];
+    gshare_gag_hybrid_pht[ghr]=(gshare_gag_hybrid_pht[ghr]<(0))?(0):gshare_gag_hybrid_pht[ghr];
+    sag_gag_hybrid_pht[ghr]=(sag_gag_hybrid_pht[ghr]>3)?3:sag_gag_hybrid_pht[ghr];
+    gshare_sag_hybrid_pht[ghr]=(gshare_sag_hybrid_pht[ghr]>3)?3:gshare_sag_hybrid_pht[ghr];
+    gshare_gag_hybrid_pht[ghr]=(gshare_gag_hybrid_pht[ghr]>3)?3:gshare_gag_hybrid_pht[ghr];
     sag_bht[pc&mask1024]=(sag_bht[pc&mask1024]<<1);
     sag_bht[pc&mask1024]|=1;
     sag_bht[pc&mask1024]&=mask512;
