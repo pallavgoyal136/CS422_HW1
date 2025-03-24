@@ -91,11 +91,13 @@ VOID predict_control_flow_ins(ADDRINT pc, ADDRINT nextpc, ADDRINT target)
     UINT64 curr;
     for(UINT64 i=0;i<4;i++)
     {
-        if(((BTB_PC[index][i]>>shifttag)&masktag) == tag && (BTB_PC[index][i]>>shiftvalid==1))
+        //if((((BTB_PC[index][i]>>shifttag)&masktag) == tag) && ((BTB_PC[index][i]>>shiftvalid)==1))
+        if((((BTB_PC[index][i]>>shifttag)&masktag) == tag))
         {
             hit=1;
             way=i;
             curr=(BTB_PC[index][i]>>shiftlru)&masklru;
+            break;
         }
     }
     if(hit==0){
@@ -110,7 +112,7 @@ VOID predict_control_flow_ins(ADDRINT pc, ADDRINT nextpc, ADDRINT target)
     {
         for(UINT64 i=0;i<4;i++)
         {
-            if(BTB_PC[index][i]>>shiftvalid==0 || ((BTB_PC[index][i]>>shiftlru)&masklru)==3)
+            if((BTB_PC[index][i]>>shiftvalid)==0 || ((BTB_PC[index][i]>>shiftlru)&masklru)==3)
             {
                 BTB_PC[index][i]=tag<<shifttag;
                 BTB_PC[index][i]=BTB_PC[index][i]|(1ULL<<shiftvalid);
@@ -121,7 +123,7 @@ VOID predict_control_flow_ins(ADDRINT pc, ADDRINT nextpc, ADDRINT target)
         }
         for(UINT64 i=0;i<4;i++)
         {
-            if(i!=way && BTB_PC[index][i]>>shiftvalid==1)
+            if(i!=way && (BTB_PC[index][i]>>shiftvalid)==1)
             {
                 UINT64 temp=BTB_PC[index][i];
                 BTB_PC[index][i]|=(temp&hmask)|(((temp>>shiftlru)+1)<<shiftlru);
@@ -133,7 +135,7 @@ VOID predict_control_flow_ins(ADDRINT pc, ADDRINT nextpc, ADDRINT target)
     {
         for(UINT64 i=0;i<4;i++)
         {
-            if(i!=way && ((BTB_PC[index][i]>>shiftlru)&masklru)<curr && BTB_PC[index][i]>>shiftvalid==1)
+            if(i!=way && ((BTB_PC[index][i]>>shiftlru)&masklru)<curr && (BTB_PC[index][i]>>shiftvalid)==1)
             {
                 UINT64 temp=BTB_PC[index][i];
                 BTB_PC[index][i]|=(temp&hmask)|(((temp>>shiftlru)+1)<<shiftlru);  
@@ -145,7 +147,111 @@ VOID predict_control_flow_ins(ADDRINT pc, ADDRINT nextpc, ADDRINT target)
         }
     }
     control_flow++;
-}VOID predict_control_flow_ins2(ADDRINT pc, ADDRINT nextpc, ADDRINT target)
+}
+VOID predict_control_flow_ins_fin(ADDRINT pc, ADDRINT nextpc, ADDRINT target)
+{
+    UINT64 pc64 = (UINT64)(pc);
+    UINT64 nextpc64 = (UINT64)(nextpc);
+    UINT64 target64 = (UINT64)(target);
+
+    UINT64 index = pc64 & mask128;
+    UINT64 tag = (pc64 >> 7) & masktag;
+    UINT64 pred;
+    UINT64 hit = 0, way = 0;
+    UINT64 curr;
+
+   
+    for (UINT64 i = 0; i < numways; i++)
+    {
+        UINT64 btb_entry = BTB_PC[index][i];
+        UINT64 btb_tag = (btb_entry >> shifttag) & masktag;
+        UINT64 valid = (btb_entry >> shiftvalid) & 1;
+
+        if (btb_tag == tag && valid)
+        {
+            hit = 1;
+            way = i;
+            curr = (btb_entry >> shiftlru) & masklru;
+            break;
+        }
+    }
+
+    if (hit == 0)
+    {
+        pred = nextpc64;
+        miss_BTB_PC++;
+    }
+    else
+    {
+        pred = BTB_PC[index][way] & masktarget;
+    }
+
+    if (pred != target64)
+    {
+        mispred_BTB_PC++;
+    }
+
+    if (hit == 0)
+    {
+       
+        for (UINT64 i = 0; i < numways; i++)
+        {
+            UINT64 btb_entry = BTB_PC[index][i];
+            UINT64 valid = (btb_entry >> shiftvalid) & 1;
+            UINT64 lru = (btb_entry >> shiftlru) & masklru;
+
+            if (valid == 0 || lru == 3)
+            {
+                BTB_PC[index][i] = (tag << shifttag) | (1ULL << shiftvalid) | (target64 & masktarget);
+                way = i;
+                break;
+            }
+        }
+
+        
+        for (UINT64 i = 0; i < numways; i++)
+        {
+            if (i != way)
+            {
+                UINT64 btb_entry = BTB_PC[index][i];
+                UINT64 valid = (btb_entry >> shiftvalid) & 1;
+
+                if (valid)
+                {
+                    UINT64 lru = (btb_entry >> shiftlru) & masklru;
+                    lru = (lru + 1) & masklru;
+                    BTB_PC[index][i] = (btb_entry & ~(masklru << shiftlru)) | (lru << shiftlru);
+                }
+            }
+        }
+    }
+    else
+    {
+        
+        for (UINT64 i = 0; i < numways; i++)
+        {
+            UINT64 btb_entry = BTB_PC[index][i];
+            UINT64 valid = (btb_entry >> shiftvalid) & 1;
+
+            if (i == way)
+            {
+                BTB_PC[index][i] = (tag << shifttag) | (1ULL << shiftvalid) | (target64 & masktarget);
+            }
+            else if (valid)
+            {
+                UINT64 lru = (btb_entry >> shiftlru) & masklru;
+                if (lru < curr)
+                {
+                    lru = (lru + 1) & masklru;
+                    BTB_PC[index][i] = (btb_entry & ~(masklru << shiftlru)) | (lru << shiftlru);
+                }
+            }
+        }
+    }
+
+    control_flow++;
+}
+VOID predict_control_flow_ins2(ADDRINT pc, ADDRINT nextpc, ADDRINT target)
 {
     UINT64 index =  (pc&mask128)^(ghr&mask128);
     UINT64 tag = pc;
@@ -368,7 +474,7 @@ VOID Trace(TRACE trace, VOID *v){
             if(INS_IsIndirectControlFlow(ins))
             {
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward,IARG_END);
-                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)predict_control_flow_ins, IARG_ADDRINT,(ADDRINT)INS_Address(ins),IARG_ADDRINT, (ADDRINT)INS_NextAddress(ins),IARG_BRANCH_TARGET_ADDR,IARG_END);
+                INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)predict_control_flow_ins_fin, IARG_ADDRINT,(ADDRINT)INS_Address(ins),IARG_ADDRINT, (ADDRINT)INS_NextAddress(ins),IARG_BRANCH_TARGET_ADDR,IARG_END);
                 INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
                 INS_InsertThenCall(ins,IPOINT_BEFORE,(AFUNPTR)predict_control_flow_ins2, IARG_ADDRINT,(ADDRINT)INS_Address(ins),IARG_ADDRINT, (ADDRINT)INS_NextAddress(ins),IARG_BRANCH_TARGET_ADDR,IARG_END);
             }
