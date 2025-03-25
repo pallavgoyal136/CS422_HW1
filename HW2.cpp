@@ -27,42 +27,88 @@ ofstream OutFile;
 bool FNBT;
 bool bimodal;
 bool sag;
+bool sag2;
+bool sag3;
+bool sag4;
 bool gag;
+bool gag2;
+bool gag3;
+bool gag4;
 bool gshare;
+bool gshare2;
+bool gshare3;
+bool gshare4;
 bool sag_gag_hybrid;
+bool sag_gag_hybrid2;
 bool sag_gag_gshare_hybrid_majority;
 bool sag_gag_gshare_hybrid_tournament;
 bool analyze=false;
 INT8 bimodal_pht[bimodal_pht_height];
 INT16 sag_bht[sag_bht_height];
 INT8 sag_pht[sag_pht_height];
+INT16 sag_bht2[sag_bht_height];
+INT8 sag_pht2[sag_pht_height];
+INT16 sag_bht3[sag_bht_height];
+INT8 sag_pht3[sag_pht_height];
+INT16 sag_bht4[sag_bht_height];
+INT8 sag_pht4[sag_pht_height];
 INT16 ghr;
 INT8 gag_pht[gag_pht_height];
 INT8 gshare_pht[gshare_pht_height];
+INT8 gag_pht2[gag_pht_height];
+INT8 gshare_pht2[gshare_pht_height];
+INT8 gag_pht3[gag_pht_height];
+INT8 gshare_pht3[gshare_pht_height];
+INT8 gag_pht4[gag_pht_height];
+INT8 gshare_pht4[gshare_pht_height];
 INT8 sag_gag_hybrid_pht[sag_gag_hybrid_height];
 INT8 gshare_sag_hybrid_pht[gshare_sag_hybrid_height];
 INT8 gshare_gag_hybrid_pht[gshare_gag_hybrid_height];
+INT8 sag_gag_hybrid_pht2[sag_gag_hybrid_height];
+INT8 gshare_sag_hybrid_pht2[gshare_sag_hybrid_height];
+INT8 gshare_gag_hybrid_pht2[gshare_gag_hybrid_height];
 UINT64 BTB_PC[numsets][numways];
 UINT64 BTB_H1[numsets][numways];
 UINT64 BTB_H2[numsets][numways];
 UINT64 icount=0;
+UINT64 funcount=0;
 UINT64 fast_forward_count;
 UINT64 forward_branches=0;
 UINT64 forward_FNBT=0;
 UINT64 forward_bimodal=0;
 UINT64 forward_sag=0;
+UINT64 forward_sag2=0;
+UINT64 forward_sag3=0;
+UINT64 forward_sag4=0;
 UINT64 forward_gag=0;
+UINT64 forward_gag2=0;
+UINT64 forward_gag3=0;
+UINT64 forward_gag4=0;
 UINT64 forward_gshare=0;
+UINT64 forward_gshare2=0;
+UINT64 forward_gshare3=0;
+UINT64 forward_gshare4=0;
 UINT64 forward_sag_gag_hybrid=0;
+UINT64 forward_sag_gag_hybrid2=0;
 UINT64 forward_sag_gag_gshare_hybrid_majority=0;
 UINT64 forward_sag_gag_gshare_hybrid_tournament=0;
 UINT64 backward_branches=0;
 UINT64 backward_FNBT=0;
 UINT64 backward_bimodal=0;
 UINT64 backward_sag=0;
+UINT64 backward_sag2=0;
+UINT64 backward_sag3=0;
+UINT64 backward_sag4=0;
 UINT64 backward_gag=0;
+UINT64 backward_gag2=0;
+UINT64 backward_gag3=0;
+UINT64 backward_gag4=0;
 UINT64 backward_gshare=0;
+UINT64 backward_gshare2=0;
+UINT64 backward_gshare3=0;
+UINT64 backward_gshare4=0;
 UINT64 backward_sag_gag_hybrid=0;
+UINT64 backward_sag_gag_hybrid2=0;
 UINT64 backward_sag_gag_gshare_hybrid_majority=0;
 UINT64 backward_sag_gag_gshare_hybrid_tournament=0;
 UINT64 miss_BTB_PC=0;
@@ -83,73 +129,7 @@ ADDRINT CheckFastForward (void) {
 ADDRINT FastForward (void) {
     return analyze;
 }
-VOID predict_control_flow_ins(UINT32 taken, ADDRINT pc, ADDRINT nextpc, ADDRINT target)
-{
-    UINT64 index =  pc&mask128;
-    UINT64 tag = pc>>7;
-    UINT64 pred;
-    UINT64 hit=0, way=0;
-    UINT64 curr;
-    for(UINT64 i=0;i<4;i++)
-    {
-        //if((((BTB_PC[index][i]>>shifttag)&masktag) == tag) && ((BTB_PC[index][i]>>shiftvalid)==1))
-        if((((BTB_PC[index][i]>>shifttag)&masktag) == tag))
-        {
-            hit=1;
-            way=i;
-            curr=(BTB_PC[index][i]>>shiftlru)&masklru;
-            break;
-        }
-    }
-    if(hit==0){
-        pred=nextpc;
-        miss_BTB_PC++;
-    }
-    else
-        pred=BTB_PC[index][way]&masktarget;
-    if(pred!=(taken?target:nextpc))
-        mispred_BTB_PC++;
-    if(hit==0)
-    {
-        for(UINT64 i=0;i<4;i++)
-        {
-            if((BTB_PC[index][i]>>shiftvalid)==0 || ((BTB_PC[index][i]>>shiftlru)&masklru)==3)
-            {
-                BTB_PC[index][i]=tag<<shifttag;
-                BTB_PC[index][i]=BTB_PC[index][i]|(1ULL<<shiftvalid);
-                BTB_PC[index][i]=BTB_PC[index][i]|(target);
-                way=i;
-                break;
-            }
-        }
-        for(UINT64 i=0;i<4;i++)
-        {
-            if(i!=way && (BTB_PC[index][i]>>shiftvalid)==1)
-            {
-                UINT64 temp=BTB_PC[index][i];
-                BTB_PC[index][i]|=(temp&hmask)|(((temp>>shiftlru)+1)<<shiftlru);
-            }
-
-        }
-    }
-    else
-    {
-        for(UINT64 i=0;i<4;i++)
-        {
-            if(i!=way && ((BTB_PC[index][i]>>shiftlru)&masklru)<curr && (BTB_PC[index][i]>>shiftvalid)==1)
-            {
-                UINT64 temp=BTB_PC[index][i];
-                BTB_PC[index][i]|=(temp&hmask)|(((temp>>shiftlru)+1)<<shiftlru);  
-            }
-            else if(i==way)
-            {
-                BTB_PC[index][i]=(1ULL<<shiftvalid)|(tag<<shifttag)|(target);
-            }
-        }
-    }
-    control_flow++;
-}
-VOID predict_control_flow_ins_fin(UINT32 taken, ADDRINT pc, ADDRINT nextpc, ADDRINT target)
+VOID predict_control_flow_ins_fin(bool taken, ADDRINT pc, ADDRINT nextpc, ADDRINT target)
 {
     if(!taken)
      countnottaken++;
@@ -189,7 +169,7 @@ VOID predict_control_flow_ins_fin(UINT32 taken, ADDRINT pc, ADDRINT nextpc, ADDR
         pred = BTB_PC[index][way] & masktarget;
     }
 
-    if (pred != (taken?target:nextpc))
+    if (pred != (taken?target64:nextpc64))
     {
         mispred_BTB_PC++;
     }
@@ -254,10 +234,13 @@ VOID predict_control_flow_ins_fin(UINT32 taken, ADDRINT pc, ADDRINT nextpc, ADDR
 
     control_flow++;
 }
-VOID predict_control_flow_ins2(UINT32 taken, ADDRINT pc, ADDRINT nextpc, ADDRINT target)
+VOID predict_control_flow_ins2(bool taken, ADDRINT pc, ADDRINT nextpc, ADDRINT target)
 {
+    UINT64 pc64 = (UINT64)(pc);
+    UINT64 nextpc64 = (UINT64)(nextpc);
+    UINT64 target64 = (UINT64)(target);
     UINT64 index =  (pc&mask128)^(ghr&mask128);
-    UINT64 tag = pc;
+    UINT64 tag = pc64;
     UINT64 pred;
     UINT64 hit=0, way=0;
     UINT64 curr;
@@ -271,12 +254,12 @@ VOID predict_control_flow_ins2(UINT32 taken, ADDRINT pc, ADDRINT nextpc, ADDRINT
         }
     }
     if(hit==0){
-        pred=nextpc;
+        pred=nextpc64;
         miss_BTB_H++;
     }
     else
         pred=BTB_H1[index][way]&masktarget;
-    if(pred!=(taken?target:nextpc))
+    if(pred!=(taken?target64:nextpc64))
         mispred_BTB_H++;
     if(hit==0)
     {
@@ -286,7 +269,7 @@ VOID predict_control_flow_ins2(UINT32 taken, ADDRINT pc, ADDRINT nextpc, ADDRINT
             {
                 BTB_H2[index][i]=tag;
                 BTB_H2[index][i]=BTB_H2[index][i]|(1ULL<<34);
-                BTB_H1[index][i]=target;
+                BTB_H1[index][i]=target64;
                 way=i;
                 break;
             }
@@ -311,7 +294,7 @@ VOID predict_control_flow_ins2(UINT32 taken, ADDRINT pc, ADDRINT nextpc, ADDRINT
             {
                 BTB_H2[index][i]=tag;
                 BTB_H2[index][i]=BTB_H2[index][i]|(1ULL<<34);
-                BTB_H1[index][i]=target;   
+                BTB_H1[index][i]=target64;   
             }
         }
     }
@@ -321,17 +304,27 @@ VOID predict_unconditional_branch(ADDRINT pc, ADDRINT target){
     FNBT=(pc>target);
     bimodal=(bimodal_pht[pc&mask512]>=1);
     sag=(sag_pht[sag_bht[pc&mask1024]]>=1);
+    sag2=(sag_pht2[sag_bht2[pc&mask1024]]>=1);
+    sag3=(sag_pht3[sag_bht3[pc&mask1024]]>=1);
+    sag4=(sag_pht4[sag_bht4[pc&mask1024]]>=1);
     gag=(gag_pht[ghr]>=4);
+    gag2=(gag_pht2[ghr]>=4);
+    gag3=(gag_pht3[ghr]>=4);
+    gag4=(gag_pht4[ghr]>=4);
     gshare=(gshare_pht[(pc&mask512)^ghr]>=4);
-    sag_gag_hybrid=((sag_gag_hybrid_pht[ghr]>=1) ? sag: gag);
+    gshare2=(gshare_pht2[(pc&mask512)^ghr]>=4);
+    gshare3=(gshare_pht3[(pc&mask512)^ghr]>=4);
+    gshare4=(gshare_pht4[(pc&mask512)^ghr]>=4);
+    sag_gag_hybrid=((sag_gag_hybrid_pht[ghr]>=1) ? sag2: gag2);
+    sag_gag_hybrid2=((sag_gag_hybrid_pht2[ghr]>=1) ? sag4: gag4);
     INT8 majority=0;
-    majority+=(sag?1:0);majority+=(gag?1:0);majority+=(gshare?1:0);
+    majority+=(sag3?1:0);majority+=(gag3?1:0);majority+=(gshare3?1:0);
     sag_gag_gshare_hybrid_majority=(majority>=2);
-    if(sag_gag_hybrid_pht[ghr]>=1){
-        sag_gag_gshare_hybrid_tournament=((gshare_sag_hybrid_pht[ghr]>=1)?gshare:sag);
+    if(sag_gag_hybrid_pht2[ghr]>=1){
+        sag_gag_gshare_hybrid_tournament=((gshare_sag_hybrid_pht2[ghr]>=1)?gshare4:sag4);
     }
     else{
-        sag_gag_gshare_hybrid_tournament=((gshare_gag_hybrid_pht[ghr]>=1)?gshare:gag);
+        sag_gag_gshare_hybrid_tournament=((gshare_gag_hybrid_pht2[ghr]>=1)?gshare4:gag4);
     }
     if(FNBT){
         backward_branches++;
@@ -346,43 +339,99 @@ VOID update_fall_through(ADDRINT pc){
         backward_FNBT++;
         backward_bimodal+=bimodal;
         backward_sag+=sag;
+        backward_sag2+=sag2;
+        backward_sag3+=sag3;
+        backward_sag4+=sag4;
         backward_gag+=gag;
+        backward_gag2+=gag2;
+        backward_gag3+=gag3;
+        backward_gag4+=gag4;
         backward_gshare+=gshare;
+        backward_gshare2+=gshare2;
+        backward_gshare3+=gshare3;
+        backward_gshare4+=gshare4;
         backward_sag_gag_hybrid+=sag_gag_hybrid;
+        backward_sag_gag_hybrid2+=sag_gag_hybrid2;
         backward_sag_gag_gshare_hybrid_majority+=sag_gag_gshare_hybrid_majority;
         backward_sag_gag_gshare_hybrid_tournament+=sag_gag_gshare_hybrid_tournament;
     }
     else{
         forward_bimodal+=bimodal;
         forward_sag += sag;
+        forward_sag2 += sag2;
+        forward_sag3 += sag3;
+        forward_sag4 += sag4;
         forward_gag += gag;
+        forward_gag2 += gag2;
+        forward_gag3 += gag3;
+        forward_gag4 += gag4;
         forward_gshare += gshare;
+        forward_gshare2 += gshare2;
+        forward_gshare3 += gshare3;
+        forward_gshare4 += gshare4;
         forward_sag_gag_hybrid += sag_gag_hybrid;
+        forward_sag_gag_hybrid2 += sag_gag_hybrid2;
         forward_sag_gag_gshare_hybrid_majority += sag_gag_gshare_hybrid_majority;
         forward_sag_gag_gshare_hybrid_tournament += sag_gag_gshare_hybrid_tournament;
     }
     bimodal_pht[pc&mask512]--;
     sag_pht[sag_bht[pc&mask1024]]--;
+    sag_pht2[sag_bht2[pc&mask1024]]--;
+    sag_pht3[sag_bht3[pc&mask1024]]--;
+    sag_pht4[sag_bht4[pc&mask1024]]--;
     gag_pht[ghr]--;
+    gag_pht2[ghr]--;
+    gag_pht3[ghr]--;
+    gag_pht4[ghr]--;
     gshare_pht[(pc&mask512)^ghr]--;
-    if(sag&&(!gag)) sag_gag_hybrid_pht[ghr]--;
-    else if((!sag)&&gag) sag_gag_hybrid_pht[ghr]++;
-    if(sag&&(!gshare)) gshare_sag_hybrid_pht[ghr]++;
-    else if((!sag)&&gshare) gshare_sag_hybrid_pht[ghr]--;
-    if(gag&&(!gshare)) gshare_gag_hybrid_pht[ghr]++;
-    else if((!gag)&&gshare) gshare_gag_hybrid_pht[ghr]--;
+    gshare_pht2[(pc&mask512)^ghr]--;
+    gshare_pht3[(pc&mask512)^ghr]--;
+    gshare_pht4[(pc&mask512)^ghr]--;
+    if(sag2&&(!gag2)) sag_gag_hybrid_pht[ghr]--;
+    else if((!sag2)&&gag2) sag_gag_hybrid_pht[ghr]++;
+    if(sag4&&(!gag4)) sag_gag_hybrid_pht2[ghr]--;
+    else if((!sag4)&&gag4) sag_gag_hybrid_pht2[ghr]++;
+    if(sag2&&(!gshare2)) gshare_sag_hybrid_pht[ghr]++;
+    else if((!sag2)&&gshare2) gshare_sag_hybrid_pht[ghr]--;
+    if(sag4&&(!gshare4)) gshare_sag_hybrid_pht2[ghr]++;
+    else if((!sag4)&&gshare4) gshare_sag_hybrid_pht2[ghr]--;
+    if(gag2&&(!gshare2)) gshare_gag_hybrid_pht[ghr]++;
+    else if((!gag2)&&gshare2) gshare_gag_hybrid_pht[ghr]--;
+    if(gag4&&(!gshare4)) gshare_gag_hybrid_pht2[ghr]++;
+    else if((!gag4)&&gshare4) gshare_gag_hybrid_pht2[ghr]--;
     bimodal_pht[pc&mask512]=(bimodal_pht[pc&mask512]<(0))?(0):bimodal_pht[pc&mask512];
     sag_pht[sag_bht[pc&mask1024]]=(sag_pht[sag_bht[pc&mask1024]]<(0))?(0):sag_pht[sag_bht[pc&mask1024]];
+    sag_pht2[sag_bht2[pc&mask1024]]=(sag_pht2[sag_bht2[pc&mask1024]]<(0))?(0):sag_pht2[sag_bht2[pc&mask1024]];
+    sag_pht3[sag_bht3[pc&mask1024]]=(sag_pht3[sag_bht3[pc&mask1024]]<(0))?(0):sag_pht3[sag_bht3[pc&mask1024]];
+    sag_pht4[sag_bht4[pc&mask1024]]=(sag_pht4[sag_bht4[pc&mask1024]]<(0))?(0):sag_pht4[sag_bht4[pc&mask1024]];
     gag_pht[ghr]=(gag_pht[ghr]<(0))?(0):gag_pht[ghr];
+    gag_pht2[ghr]=(gag_pht2[ghr]<(0))?(0):gag_pht2[ghr];
+    gag_pht3[ghr]=(gag_pht3[ghr]<(0))?(0):gag_pht3[ghr];
+    gag_pht4[ghr]=(gag_pht4[ghr]<(0))?(0):gag_pht4[ghr];
     gshare_pht[(pc&mask512)^ghr]=(gshare_pht[(pc&mask512)^ghr]<(0))?(0):gshare_pht[(pc&mask512)^ghr];
+    gshare_pht2[(pc&mask512)^ghr]=(gshare_pht2[(pc&mask512)^ghr]<(0))?(0):gshare_pht2[(pc&mask512)^ghr];
+    gshare_pht3[(pc&mask512)^ghr]=(gshare_pht3[(pc&mask512)^ghr]<(0))?(0):gshare_pht3[(pc&mask512)^ghr];
+    gshare_pht4[(pc&mask512)^ghr]=(gshare_pht4[(pc&mask512)^ghr]<(0))?(0):gshare_pht4[(pc&mask512)^ghr];
     sag_gag_hybrid_pht[ghr]=(sag_gag_hybrid_pht[ghr]<(0))?(0):sag_gag_hybrid_pht[ghr];
+    sag_gag_hybrid_pht2[ghr]=(sag_gag_hybrid_pht2[ghr]<(0))?(0):sag_gag_hybrid_pht2[ghr];
     gshare_sag_hybrid_pht[ghr]=(gshare_sag_hybrid_pht[ghr]<(0))?(0):gshare_sag_hybrid_pht[ghr];
+    gshare_sag_hybrid_pht2[ghr]=(gshare_sag_hybrid_pht2[ghr]<(0))?(0):gshare_sag_hybrid_pht2[ghr];
     gshare_gag_hybrid_pht[ghr]=(gshare_gag_hybrid_pht[ghr]<(0))?(0):gshare_gag_hybrid_pht[ghr];
+    gshare_gag_hybrid_pht2[ghr]=(gshare_gag_hybrid_pht2[ghr]<(0))?(0):gshare_gag_hybrid_pht2[ghr];
     sag_gag_hybrid_pht[ghr]=(sag_gag_hybrid_pht[ghr]>3)?3:sag_gag_hybrid_pht[ghr];
+    sag_gag_hybrid_pht2[ghr]=(sag_gag_hybrid_pht2[ghr]>3)?3:sag_gag_hybrid_pht2[ghr];
     gshare_sag_hybrid_pht[ghr]=(gshare_sag_hybrid_pht[ghr]>3)?3:gshare_sag_hybrid_pht[ghr];
+    gshare_sag_hybrid_pht2[ghr]=(gshare_sag_hybrid_pht2[ghr]>3)?3:gshare_sag_hybrid_pht2[ghr];
     gshare_gag_hybrid_pht[ghr]=(gshare_gag_hybrid_pht[ghr]>3)?3:gshare_gag_hybrid_pht[ghr];
+    gshare_gag_hybrid_pht2[ghr]=(gshare_gag_hybrid_pht2[ghr]>3)?3:gshare_gag_hybrid_pht2[ghr];
     sag_bht[pc&mask1024]=(sag_bht[pc&mask1024]<<1);
+    sag_bht2[pc&mask1024]=(sag_bht2[pc&mask1024]<<1);
+    sag_bht3[pc&mask1024]=(sag_bht3[pc&mask1024]<<1);
+    sag_bht4[pc&mask1024]=(sag_bht4[pc&mask1024]<<1);
     sag_bht[pc&mask1024]&=mask512;
+    sag_bht2[pc&mask1024]&=mask512;
+    sag_bht3[pc&mask1024]&=mask512;
+    sag_bht4[pc&mask1024]&=mask512;
     ghr=(ghr<<1);
     ghr&=mask512;
     return;
@@ -391,9 +440,19 @@ VOID update_taken_branch(ADDRINT pc){
     if(FNBT){
         backward_bimodal+=(bimodal==false);
         backward_sag += (sag == false);
+        backward_sag2 += (sag2 == false);
+        backward_sag3 += (sag3 == false);
+        backward_sag4 += (sag4 == false);
         backward_gag += (gag == false);
+        backward_gag2 += (gag2 == false);
+        backward_gag3 += (gag3 == false);
+        backward_gag4 += (gag4 == false);
         backward_gshare += (gshare == false);
+        backward_gshare2 += (gshare2 == false);
+        backward_gshare3 += (gshare3 == false);
+        backward_gshare4 += (gshare4 == false);
         backward_sag_gag_hybrid += (sag_gag_hybrid == false);
+        backward_sag_gag_hybrid2 += (sag_gag_hybrid2 == false);
         backward_sag_gag_gshare_hybrid_majority += (sag_gag_gshare_hybrid_majority == false);
         backward_sag_gag_gshare_hybrid_tournament += (sag_gag_gshare_hybrid_tournament == false);
     }
@@ -401,35 +460,84 @@ VOID update_taken_branch(ADDRINT pc){
         forward_FNBT++;
         forward_bimodal += (bimodal == false);
         forward_sag += (sag == false);
+        forward_sag2 += (sag2 == false);
+        forward_sag3 += (sag3 == false);
+        forward_sag4 += (sag4 == false);
         forward_gag += (gag == false);
+        forward_gag2 += (gag2 == false);
+        forward_gag3 += (gag3 == false);
+        forward_gag4 += (gag4 == false);
         forward_gshare += (gshare == false);
+        forward_gshare2 += (gshare2 == false);
+        forward_gshare3 += (gshare3 == false);
+        forward_gshare4 += (gshare4 == false);
         forward_sag_gag_hybrid += (sag_gag_hybrid == false);
+        forward_sag_gag_hybrid2 += (sag_gag_hybrid2 == false);
         forward_sag_gag_gshare_hybrid_majority += (sag_gag_gshare_hybrid_majority == false);
         forward_sag_gag_gshare_hybrid_tournament += (sag_gag_gshare_hybrid_tournament == false);
     }
     bimodal_pht[pc&mask512]++;
     sag_pht[sag_bht[pc&mask1024]]++;
+    sag_pht2[sag_bht2[pc&mask1024]]++;
+    sag_pht3[sag_bht3[pc&mask1024]]++;
+    sag_pht4[sag_bht4[pc&mask1024]]++;
     gag_pht[ghr]++;
+    gag_pht2[ghr]++;
+    gag_pht3[ghr]++;
+    gag_pht4[ghr]++;
     gshare_pht[(pc&mask512)^ghr]++;
-    if(sag&&(!gag)) sag_gag_hybrid_pht[ghr]++;
-    else if((!sag)&&gag) sag_gag_hybrid_pht[ghr]--;
-    if(sag&&(!gshare)) gshare_sag_hybrid_pht[ghr]--;
-    else if((!sag)&&gshare) gshare_sag_hybrid_pht[ghr]++;
-    if(gag&&(!gshare)) gshare_gag_hybrid_pht[ghr]--;
-    else if((!gag)&&gshare) gshare_gag_hybrid_pht[ghr]++;
+    gshare_pht2[(pc&mask512)^ghr]++;
+    gshare_pht3[(pc&mask512)^ghr]++;
+    gshare_pht4[(pc&mask512)^ghr]++;
+    if(sag2&&(!gag2)) sag_gag_hybrid_pht[ghr]++;
+    else if((!sag2)&&gag2) sag_gag_hybrid_pht[ghr]--;
+    if(sag4&&(!gag4)) sag_gag_hybrid_pht2[ghr]++;
+    else if((!sag4)&&gag4) sag_gag_hybrid_pht2[ghr]--;
+    if(sag2&&(!gshare2)) gshare_sag_hybrid_pht[ghr]--;
+    else if((!sag2)&&gshare2) gshare_sag_hybrid_pht[ghr]++;
+    if(sag4&&(!gshare4)) gshare_sag_hybrid_pht2[ghr]--;
+    else if((!sag4)&&gshare4) gshare_sag_hybrid_pht2[ghr]++;
+    if(gag2&&(!gshare2)) gshare_gag_hybrid_pht[ghr]--;
+    else if((!gag2)&&gshare2) gshare_gag_hybrid_pht[ghr]++;
+    if(gag4&&(!gshare4)) gshare_gag_hybrid_pht2[ghr]--;
+    else if((!gag4)&&gshare4) gshare_gag_hybrid_pht2[ghr]++;
     bimodal_pht[pc&mask512]=(bimodal_pht[pc&mask512]>3)?3:bimodal_pht[pc&mask512];
     sag_pht[sag_bht[pc&mask1024]]=(sag_pht[sag_bht[pc&mask1024]]>3)?3:sag_pht[sag_bht[pc&mask1024]];
+    sag_pht2[sag_bht2[pc&mask1024]]=(sag_pht2[sag_bht2[pc&mask1024]]>3)?3:sag_pht2[sag_bht2[pc&mask1024]];
+    sag_pht3[sag_bht3[pc&mask1024]]=(sag_pht3[sag_bht3[pc&mask1024]]>3)?3:sag_pht3[sag_bht3[pc&mask1024]];
+    sag_pht4[sag_bht4[pc&mask1024]]=(sag_pht4[sag_bht4[pc&mask1024]]>3)?3:sag_pht4[sag_bht4[pc&mask1024]];
     gag_pht[ghr]=(gag_pht[ghr]>7)?7:gag_pht[ghr];
+    gag_pht2[ghr]=(gag_pht2[ghr]>7)?7:gag_pht2[ghr];
+    gag_pht3[ghr]=(gag_pht3[ghr]>7)?7:gag_pht3[ghr];
+    gag_pht4[ghr]=(gag_pht4[ghr]>7)?7:gag_pht4[ghr];
     gshare_pht[(pc&mask512)^ghr]=(gshare_pht[(pc&mask512)^ghr]>7)?7:gshare_pht[(pc&mask512)^ghr];
+    gshare_pht2[(pc&mask512)^ghr]=(gshare_pht2[(pc&mask512)^ghr]>7)?7:gshare_pht2[(pc&mask512)^ghr];
+    gshare_pht3[(pc&mask512)^ghr]=(gshare_pht3[(pc&mask512)^ghr]>7)?7:gshare_pht3[(pc&mask512)^ghr];
+    gshare_pht4[(pc&mask512)^ghr]=(gshare_pht4[(pc&mask512)^ghr]>7)?7:gshare_pht4[(pc&mask512)^ghr];
     sag_gag_hybrid_pht[ghr]=(sag_gag_hybrid_pht[ghr]<(0))?(0):sag_gag_hybrid_pht[ghr];
+    sag_gag_hybrid_pht2[ghr]=(sag_gag_hybrid_pht2[ghr]<(0))?(0):sag_gag_hybrid_pht2[ghr];
     gshare_sag_hybrid_pht[ghr]=(gshare_sag_hybrid_pht[ghr]<(0))?(0):gshare_sag_hybrid_pht[ghr];
+    gshare_sag_hybrid_pht2[ghr]=(gshare_sag_hybrid_pht2[ghr]<(0))?(0):gshare_sag_hybrid_pht2[ghr];
     gshare_gag_hybrid_pht[ghr]=(gshare_gag_hybrid_pht[ghr]<(0))?(0):gshare_gag_hybrid_pht[ghr];
+    gshare_gag_hybrid_pht2[ghr]=(gshare_gag_hybrid_pht2[ghr]<(0))?(0):gshare_gag_hybrid_pht2[ghr];
     sag_gag_hybrid_pht[ghr]=(sag_gag_hybrid_pht[ghr]>3)?3:sag_gag_hybrid_pht[ghr];
+    sag_gag_hybrid_pht2[ghr]=(sag_gag_hybrid_pht2[ghr]>3)?3:sag_gag_hybrid_pht2[ghr];
     gshare_sag_hybrid_pht[ghr]=(gshare_sag_hybrid_pht[ghr]>3)?3:gshare_sag_hybrid_pht[ghr];
+    gshare_sag_hybrid_pht2[ghr]=(gshare_sag_hybrid_pht2[ghr]>3)?3:gshare_sag_hybrid_pht2[ghr];
     gshare_gag_hybrid_pht[ghr]=(gshare_gag_hybrid_pht[ghr]>3)?3:gshare_gag_hybrid_pht[ghr];
+    gshare_gag_hybrid_pht2[ghr]=(gshare_gag_hybrid_pht2[ghr]>3)?3:gshare_gag_hybrid_pht2[ghr];
     sag_bht[pc&mask1024]=(sag_bht[pc&mask1024]<<1);
+    sag_bht2[pc&mask1024]=(sag_bht2[pc&mask1024]<<1);
+    sag_bht3[pc&mask1024]=(sag_bht3[pc&mask1024]<<1);
+    sag_bht4[pc&mask1024]=(sag_bht4[pc&mask1024]<<1);
     sag_bht[pc&mask1024]|=1;
+    sag_bht2[pc&mask1024]|=1;
+    sag_bht3[pc&mask1024]|=1;
+    sag_bht4[pc&mask1024]|=1;
     sag_bht[pc&mask1024]&=mask512;
+    sag_bht2[pc&mask1024]&=mask512;
+    sag_bht3[pc&mask1024]&=mask512;
+    sag_bht4[pc&mask1024]&=mask512;
     ghr=(ghr<<1);
     ghr|=1;
     ghr&=mask512;
@@ -453,6 +561,7 @@ void MyExitRoutine() {
     OutFile<<"BTB1 : Accesses "<<control_flow<<", Mispredictions "<<mispred_BTB_PC<<" ("<<(double)mispred_BTB_PC/control_flow<<"), Misses "<<miss_BTB_PC<<" ("<<(double)miss_BTB_PC/control_flow<<")\n";
     OutFile<<"BTB2 : Accesses "<<control_flow<<", Mispredictions "<<mispred_BTB_H<<" ("<<(double)mispred_BTB_H/control_flow<<"), Misses "<<miss_BTB_H<<" ("<<(double)miss_BTB_H/control_flow<<")\n";
     OutFile<<"not taken btb:"<<countnottaken<<endl;
+    OutFile<<"number of valid fall through:"<<funcount<<endl;
     OutFile<<"===============================================\n";
     endTime = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = endTime - startTime;
@@ -476,16 +585,10 @@ VOID Trace(TRACE trace, VOID *v){
             }
             if(INS_IsIndirectControlFlow(ins))
             {
-  	      if(INS_Valid(INS_Next(ins))){
-                INS_InsertIfCall(ins,IPOINT_AFTER, (AFUNPTR)FastForward,IARG_END);
-                INS_InsertThenCall(ins,IPOINT_AFTER, (AFUNPTR)predict_control_flow_ins_fin, IARG_UINT32, 0,IARG_ADDRINT,(ADDRINT)INS_Address(ins),IARG_ADDRINT, (ADDRINT)INS_NextAddress(ins),IARG_BRANCH_TARGET_ADDR,IARG_END);
-                INS_InsertIfCall(ins,IPOINT_AFTER, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenCall(ins,IPOINT_AFTER,(AFUNPTR)predict_control_flow_ins2,IARG_UINT32, 0, IARG_ADDRINT,(ADDRINT)INS_Address(ins),IARG_ADDRINT, (ADDRINT)INS_NextAddress(ins),IARG_BRANCH_TARGET_ADDR,IARG_END);
-		}
-		INS_InsertIfCall(ins,IPOINT_TAKEN_BRANCH, (AFUNPTR)FastForward,IARG_END);
-                INS_InsertThenCall(ins,IPOINT_TAKEN_BRANCH, (AFUNPTR)predict_control_flow_ins_fin, IARG_UINT32, 1,IARG_ADDRINT,(ADDRINT)INS_Address(ins),IARG_ADDRINT, (ADDRINT)INS_NextAddress(ins),IARG_BRANCH_TARGET_ADDR,IARG_END);
-                INS_InsertIfCall(ins,IPOINT_TAKEN_BRANCH, (AFUNPTR)FastForward, IARG_END);
-                INS_InsertThenCall(ins,IPOINT_TAKEN_BRANCH,  (AFUNPTR)predict_control_flow_ins2, IARG_UINT32, 1,IARG_ADDRINT,(ADDRINT)INS_Address(ins),IARG_ADDRINT, (ADDRINT)INS_NextAddress(ins),IARG_BRANCH_TARGET_ADDR,IARG_END);
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenCall(ins,IPOINT_BEFORE,  (AFUNPTR)predict_control_flow_ins2, IARG_BRANCH_TAKEN, IARG_ADDRINT, (ADDRINT)INS_Address(ins),IARG_ADDRINT, (ADDRINT)INS_NextAddress(ins),IARG_BRANCH_TARGET_ADDR,IARG_END);
+                INS_InsertIfCall(ins,IPOINT_BEFORE, (AFUNPTR)FastForward, IARG_END);
+                INS_InsertThenCall(ins,IPOINT_BEFORE,  (AFUNPTR)predict_control_flow_ins_fin, IARG_BRANCH_TAKEN, IARG_ADDRINT, (ADDRINT)INS_Address(ins),IARG_ADDRINT, (ADDRINT)INS_NextAddress(ins),IARG_BRANCH_TARGET_ADDR,IARG_END);
             }
         }
         BBL_InsertCall(bbl, IPOINT_BEFORE, (AFUNPTR)docount, IARG_UINT32, BBL_NumIns(bbl), IARG_END);
@@ -541,4 +644,3 @@ int main(int argc, char * argv[])
     
     return 0;
 }
-
