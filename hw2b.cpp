@@ -55,11 +55,11 @@ INT8 sag_pht4[sag_pht_height];
 INT16 ghr;
 INT8 gag_pht[gag_pht_height];
 INT8 gshare_pht[gshare_pht_height];
-NT8 gag_pht2[gag_pht_height];
+INT8 gag_pht2[gag_pht_height];
 INT8 gshare_pht2[gshare_pht_height];
-NT8 gag_pht3[gag_pht_height];
+INT8 gag_pht3[gag_pht_height];
 INT8 gshare_pht3[gshare_pht_height];
-NT8 gag_pht4[gag_pht_height];
+INT8 gag_pht4[gag_pht_height];
 INT8 gshare_pht4[gshare_pht_height];
 INT8 sag_gag_hybrid_pht[sag_gag_hybrid_height];
 INT8 gshare_sag_hybrid_pht[gshare_sag_hybrid_height];
@@ -71,6 +71,7 @@ UINT64 BTB_PC[numsets][numways];
 UINT64 BTB_H1[numsets][numways];
 UINT64 BTB_H2[numsets][numways];
 UINT64 icount=0;
+UINT64 funcount=0;
 UINT64 fast_forward_count;
 UINT64 forward_branches=0;
 UINT64 forward_FNBT=0;
@@ -84,7 +85,7 @@ UINT64 forward_gag2=0;
 UINT64 forward_gag3=0;
 UINT64 forward_gag4=0;
 UINT64 forward_gshare=0;
-UINT64 forward_gsahre2=0;
+UINT64 forward_gshare2=0;
 UINT64 forward_gshare3=0;
 UINT64 forward_gshare4=0;
 UINT64 forward_sag_gag_hybrid=0;
@@ -557,6 +558,7 @@ void MyExitRoutine() {
     OutFile<<"BTB1 : Accesses "<<control_flow<<", Mispredictions "<<mispred_BTB_PC<<" ("<<(double)mispred_BTB_PC/control_flow<<"), Misses "<<miss_BTB_PC<<" ("<<(double)miss_BTB_PC/control_flow<<")\n";
     OutFile<<"BTB2 : Accesses "<<control_flow<<", Mispredictions "<<mispred_BTB_H<<" ("<<(double)mispred_BTB_H/control_flow<<"), Misses "<<miss_BTB_H<<" ("<<(double)miss_BTB_H/control_flow<<")\n";
     OutFile<<"not taken btb:"<<countnottaken<<endl;
+    OutFile<<"number of valid fall through:"<<funcount<<endl;
     OutFile<<"===============================================\n";
     endTime = std::chrono::system_clock::now();
     std::chrono::duration<double> elapsed_seconds = endTime - startTime;
@@ -581,6 +583,7 @@ VOID Trace(TRACE trace, VOID *v){
             if(INS_IsIndirectControlFlow(ins))
             {
   	      if(INS_Valid(INS_Next(ins))){
+		funcount++;
                 INS_InsertIfCall(ins,IPOINT_AFTER, (AFUNPTR)FastForward,IARG_END);
                 INS_InsertThenCall(ins,IPOINT_AFTER, (AFUNPTR)predict_control_flow_ins_fin, IARG_UINT32, 0,IARG_ADDRINT,(ADDRINT)INS_Address(ins),IARG_ADDRINT, (ADDRINT)INS_NextAddress(ins),IARG_BRANCH_TARGET_ADDR,IARG_END);
                 INS_InsertIfCall(ins,IPOINT_AFTER, (AFUNPTR)FastForward, IARG_END);
