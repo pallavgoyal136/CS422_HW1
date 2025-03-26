@@ -302,11 +302,11 @@ VOID predict_control_flow_ins2(bool taken, ADDRINT pc, ADDRINT nextpc, ADDRINT t
 }
 VOID predict_unconditional_branch(ADDRINT pc, ADDRINT target){
     FNBT=(pc>target);
-    bimodal=(bimodal_pht[pc&mask512]>=1);
-    sag=(sag_pht[sag_bht[pc&mask1024]]>=1);
-    sag2=(sag_pht2[sag_bht2[pc&mask1024]]>=1);
-    sag3=(sag_pht3[sag_bht3[pc&mask1024]]>=1);
-    sag4=(sag_pht4[sag_bht4[pc&mask1024]]>=1);
+    bimodal=(bimodal_pht[pc&mask512]>=2);
+    sag=(sag_pht[sag_bht[pc&mask1024]]>=2);
+    sag2=(sag_pht2[sag_bht2[pc&mask1024]]>=2);
+    sag3=(sag_pht3[sag_bht3[pc&mask1024]]>=2);
+    sag4=(sag_pht4[sag_bht4[pc&mask1024]]>=2);
     gag=(gag_pht[ghr]>=4);
     gag2=(gag_pht2[ghr]>=4);
     gag3=(gag_pht3[ghr]>=4);
@@ -315,16 +315,16 @@ VOID predict_unconditional_branch(ADDRINT pc, ADDRINT target){
     gshare2=(gshare_pht2[(pc&mask512)^ghr]>=4);
     gshare3=(gshare_pht3[(pc&mask512)^ghr]>=4);
     gshare4=(gshare_pht4[(pc&mask512)^ghr]>=4);
-    sag_gag_hybrid=((sag_gag_hybrid_pht[ghr]>=1) ? sag2: gag2);
-    sag_gag_hybrid2=((sag_gag_hybrid_pht2[ghr]>=1) ? sag4: gag4);
+    sag_gag_hybrid=((sag_gag_hybrid_pht[ghr]>=2) ? sag2: gag2);
+    sag_gag_hybrid2=((sag_gag_hybrid_pht2[ghr]>=2) ? sag4: gag4);
     INT8 majority=0;
     majority+=(sag3?1:0);majority+=(gag3?1:0);majority+=(gshare3?1:0);
     sag_gag_gshare_hybrid_majority=(majority>=2);
-    if(sag_gag_hybrid_pht2[ghr]>=1){
-        sag_gag_gshare_hybrid_tournament=((gshare_sag_hybrid_pht2[ghr]>=1)?gshare4:sag4);
+    if(sag_gag_hybrid_pht2[ghr]>=2){
+        sag_gag_gshare_hybrid_tournament=((gshare_sag_hybrid_pht2[ghr]>=2)?gshare4:sag4);
     }
     else{
-        sag_gag_gshare_hybrid_tournament=((gshare_gag_hybrid_pht2[ghr]>=1)?gshare4:gag4);
+        sag_gag_gshare_hybrid_tournament=((gshare_gag_hybrid_pht2[ghr]>=2)?gshare4:gag4);
     }
     if(FNBT){
         backward_branches++;
